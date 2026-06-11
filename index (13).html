@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PosterGen Pro — NEET/JEE Paper Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --acc:#7C3AED;--acc-light:#A78BFA;--acc-glow:rgba(124,58,237,0.35);
+  --dark:#0A0A12;--card:#13132A;--card2:#1A1A35;
+  --border:rgba(124,58,237,0.22);--border2:rgba(255,255,255,0.07);
+  --easy:#22c55e;--medium:#f59e0b;--hard:#ef4444;
+  --text:#e2e8f0;--text-muted:#94a3b8;--radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+.app-header{background:linear-gradient(135deg,#0A0A12,#13132A);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.app-header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:12px}
+.pw-logo{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:#fff;font-weight:900;font-size:17px;padding:7px 13px;border-radius:8px;letter-spacing:1px;box-shadow:0 0 18px var(--acc-glow)}
+.brand-text h1{font-size:19px;font-weight:700;background:linear-gradient(90deg,#A78BFA,#C4B5FD);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-text p{font-size:11px;color:var(--text-muted)}
+.header-badge{background:rgba(124,58,237,0.15);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--acc-light);font-weight:500}
+.nav-tabs{display:flex;border-top:1px solid var(--border2);padding:0 32px}
+.nav-tab{padding:11px 26px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;background:none;border-left:none;border-right:none;border-top:none;outline:none}
+.nav-tab.active{color:var(--acc-light);border-bottom-color:var(--acc);background:rgba(124,58,237,0.08)}
+.nav-tab:hover{color:var(--text)}
+.view{display:none}.view.active{display:block}
+.container{max-width:1300px;margin:0 auto;padding:24px 32px}
+.section-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+.section-title{font-size:12px;font-weight:700;color:var(--acc-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.dash-hero{background:linear-gradient(135deg,#13132A,#1A1A35,#0D0D20);border:1px solid var(--border);border-radius:16px;padding:30px 36px;margin-bottom:22px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px}
+.hero-glow{position:absolute;top:-50px;right:-50px;width:260px;height:260px;background:radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%);pointer-events:none}
+.hero-icon{flex-shrink:0;width:80px;height:80px;background:rgba(124,58,237,0.18);border:2px solid rgba(124,58,237,0.4);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:38px}
+.hero-content h2{font-size:24px;font-weight:800;background:linear-gradient(90deg,#fff,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.hero-content p{color:var(--text-muted);font-size:14px;line-height:1.55;max-width:580px}
+.hero-kpi{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
+.kpi{background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);border-radius:10px;padding:9px 16px;text-align:center}
+.kpi .num{font-size:20px;font-weight:800;color:var(--acc-light);display:block}
+.kpi .lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.mode-selector{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.02);margin-bottom:18px}
+.mode-card{flex:1;padding:18px 12px;cursor:pointer;text-align:center;border:none;background:none;color:var(--text-muted);transition:all .22s;border-right:1px solid rgba(255,255,255,0.06);position:relative}
+.mode-card:last-child{border-right:none}
+.mode-card:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.mode-card.active{background:rgba(124,58,237,0.12);color:var(--acc-light)}
+.mode-card.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--acc)}
+.mc-icon{font-size:26px;display:block;margin-bottom:7px}
+.mc-title{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
+.mc-desc{font-size:11px;opacity:.6;line-height:1.4}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);padding:9px 12px;font-size:13px;outline:none;transition:border-color .2s;font-family:inherit}
+.form-group input:focus,.form-group select:focus{border-color:var(--acc)}
+.form-group select option{background:#13132A}
+.sheets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-bottom:12px}
+.sheet-slot{background:rgba(255,255,255,0.03);border:2px dashed rgba(255,255,255,0.1);border-radius:10px;padding:18px;transition:all .2s}
+.sheet-slot.has-file{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.04)}
+.sheet-slot.dragging{border-color:var(--acc);background:rgba(124,58,237,0.07)}
+.slot-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.sbadge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+.bp{background:rgba(99,179,237,.2);color:#63b3ed}.bc{background:rgba(246,173,85,.2);color:#f6ad55}
+.bb{background:rgba(104,211,145,.2);color:#68d391}.bm{background:rgba(167,139,250,.2);color:#a78bfa}
+.bz{background:rgba(249,115,22,.2);color:#f97316}.bgmc{background:rgba(124,58,237,.25);color:#c4b5fd}
+.drop-area{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-height:72px;justify-content:center}
+.drop-icon{font-size:26px;opacity:.35}
+.drop-text{font-size:12px;color:var(--text-muted);text-align:center}
+.drop-text strong{color:var(--acc-light)}
+.file-chosen{display:flex;align-items:center;gap:8px}
+.fi-info{flex:1;min-width:0}
+.fi-name{font-size:12px;font-weight:600;color:var(--easy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-rows{font-size:10px;color:var(--text-muted)}
+.rm-btn{background:rgba(239,68,68,0.2);border:none;color:var(--hard);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hidden-input{display:none}
+.drive-note{font-size:12px;color:var(--text-muted);background:rgba(255,255,255,0.04);border-radius:8px;padding:11px 14px;border-left:3px solid var(--acc);line-height:1.6;margin-bottom:14px}
+.drive-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.drive-row .form-group{flex:1;min-width:240px}
+.btn-fetch{background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.3);padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;height:40px;transition:all .2s;align-self:flex-end}
+.btn-fetch:hover{background:rgba(99,179,237,0.25)}.btn-fetch:disabled{opacity:.45;cursor:not-allowed}
+.drive-status-list{display:flex;flex-direction:column;gap:8px}
+.dfile-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px}
+.dfile-row.ok{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.04)}
+.dfile-row.err{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04)}
+.dfile-info{flex:1;min-width:0}
+.dfile-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dfile-sub{font-size:11px;color:var(--text-muted)}
+.dbadge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;flex-shrink:0}
+.dbadge-ok{background:rgba(34,197,94,0.15);color:#4ade80}
+.dbadge-err{background:rgba(239,68,68,0.15);color:#f87171}
+.dbadge-wait{background:rgba(124,58,237,0.15);color:#a78bfa}
+.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.ds{background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;text-align:center}
+.ds .num{font-size:28px;font-weight:800;display:block;margin-bottom:3px}
+.ds .lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.action-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-primary{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:#fff;border:none;padding:12px 26px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 18px var(--acc-glow);display:flex;align-items:center;gap:7px}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,58,237,0.5)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-sec{background:rgba(255,255,255,0.07);color:var(--text);border:1px solid rgba(255,255,255,0.12);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-sec:hover{background:rgba(255,255,255,0.11)}
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:999}
+.loading-box{background:#13132A;border:1px solid var(--border);border-radius:16px;padding:36px 48px;text-align:center;max-width:340px}
+.spin-big{width:46px;height:46px;border:3px solid rgba(124,58,237,0.2);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-box h3{font-size:16px;font-weight:700;margin-bottom:7px}
+.loading-box p{font-size:12px;color:var(--text-muted);line-height:1.5}
+.toast{position:fixed;bottom:28px;right:28px;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;transform:translateY(70px);opacity:0;transition:all .3s;z-index:9999;box-shadow:0 8px 22px rgba(0,0,0,0.4)}
+.toast.show{transform:translateY(0);opacity:1}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.3);border-radius:3px}
+
+/* ---- GMC PREVIEW in DASHBOARD ---- */
+.gmc-preview-card{background:linear-gradient(135deg,#0D0A1E,#13102A);border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:18px;margin-bottom:18px}
+.gmc-preview-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.gmc-dot{width:8px;height:8px;border-radius:50%;background:var(--acc-light);flex-shrink:0}
+.gmc-preview-header h4{font-size:13px;font-weight:700;color:var(--acc-light)}
+.gmc-preview-header span{font-size:11px;color:var(--text-muted)}
+.gmc-cutoff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.gmc-cat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center}
+.gmc-cat-card.ur{border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.08)}
+.gmc-cat-card.obc{border-color:rgba(245,158,11,0.35);background:rgba(245,158,11,0.06)}
+.gmc-cat-card.sc{border-color:rgba(34,197,94,0.35);background:rgba(34,197,94,0.06)}
+.gmc-cat-card.st{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.06)}
+.gcc-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ur .gcc-label{color:#a78bfa}.obc .gcc-label{color:#fbbf24}.sc .gcc-label{color:#4ade80}.st .gcc-label{color:#f87171}
+.gcc-value{font-size:18px;font-weight:900;line-height:1}
+.ur .gcc-value{color:#a78bfa}.obc .gcc-value{color:#f59e0b}.sc .gcc-value{color:#22c55e}.st .gcc-value{color:#ef4444}
+.gcc-sub{font-size:9px;color:var(--text-muted);margin-top:2px}
+.rank-table-wrap{overflow-x:auto;margin-top:6px}
+.rank-table{width:100%;border-collapse:collapse;font-size:12px}
+.rank-table th{background:rgba(124,58,237,0.2);color:var(--acc-light);padding:7px 10px;text-align:center;font-size:10px;letter-spacing:.4px;text-transform:uppercase;border:1px solid rgba(124,58,237,0.15)}
+.rank-table td{padding:6px 10px;text-align:center;border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px}
+.rank-table tr:hover td{background:rgba(124,58,237,0.07)}
+.rank-table tr:nth-child(even) td{background:rgba(255,255,255,0.02)}
+.set-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;display:inline-block}
+.s1{background:rgba(99,179,237,0.2);color:#63b3ed}.s2{background:rgba(167,139,250,0.2);color:#a78bfa}
+.s3{background:rgba(34,197,94,0.2);color:#4ade80}.s4{background:rgba(245,158,11,0.2);color:#fbbf24}
+.s5{background:rgba(239,68,68,0.2);color:#f87171}
+.gmc-status-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:#4ade80;margin-bottom:14px}
+.gmc-empty-state{text-align:center;padding:24px;color:var(--text-muted)}
+.gmc-empty-state .ge-icon{font-size:32px;margin-bottom:8px;opacity:.3;display:block}
+
+/* ============================================================
+   POSTER STYLES
+   ============================================================ */
+.poster-root{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a2744;width:100%;max-width:1100px;margin:0 auto;border-radius:10px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,0.18)}
+.pr-header{background:#111;color:#fff;padding:22px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:4px solid #7C3AED}
+.pr-header-left{display:flex;align-items:center;gap:14px}
+.pr-logo{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:#fff;font-weight:900;font-size:15px;padding:7px 12px;border-radius:7px;letter-spacing:1px}
+.pr-title{font-size:22px;font-weight:800;color:#fff;line-height:1.2}
+.pr-subtitle{font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px}
+.pr-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pr-meta-chip{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:4px 13px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.8)}
+.pr-body{background:linear-gradient(135deg,#f0f4ff 0%,#fdf4ff 30%,#fff7ed 60%,#f0fdf4 100%);padding:24px 28px}
+.pr-subjects{display:flex;flex-direction:column;gap:16px}
+.subj-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(26,39,68,0.09)}
+.subj-card-head{padding:10px 18px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.subj-card-title{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.subj-card-count{font-size:11px;font-weight:600;opacity:.8;background:rgba(255,255,255,0.18);border-radius:12px;padding:3px 10px}
+.q-grid-poster{display:flex;flex-wrap:wrap;gap:3px}
+.qc{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.qc-easy{background:#dcfce7;color:#166534}.qc-medium{background:#fef9c3;color:#854d0e}.qc-hard{background:#fee2e2;color:#991b1b}
+.qnum-chips{display:flex;flex-wrap:wrap;gap:3px}
+.qchip{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px}
+.qchip-easy{background:#dcfce7;color:#166534}.qchip-medium{background:#fef9c3;color:#854d0e}.qchip-hard{background:#fee2e2;color:#991b1b}
+.qnone{font-size:10px;color:#c0c8d8;font-style:italic}
+.pr-footer{background:#111;color:rgba(255,255,255,0.45);font-size:11px;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.pr-footer-brand{color:rgba(167,139,250,0.8);font-weight:700}
+.pr-legend{display:flex;gap:12px}
+.pr-leg-item{display:flex;align-items:center;gap:5px;font-size:10px}
+.pr-leg-dot{width:8px;height:8px;border-radius:50%}
+.trend-arrow{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:12px;letter-spacing:.3px}
+.trend-up{background:#fee2e2;color:#b91c1c}.trend-down{background:#dcfce7;color:#15803d}.trend-neutral{background:#f1f5f9;color:#64748b}
+.poster-empty{text-align:center;padding:60px 32px;color:var(--text-muted)}
+.poster-empty-icon{font-size:52px;margin-bottom:14px;opacity:.3}
+
+/* ---- GMC SECTION IN POSTER ---- */
+.poster-gmc-wrap{margin-top:18px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(26,39,68,0.09);border-top:4px solid #7C3AED}
+.pgmc-header{background:linear-gradient(135deg,#1a1a35,#2a1a4e);padding:13px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pgmc-header h3{color:#fff;font-size:15px;font-weight:800}
+.pgmc-badge{background:linear-gradient(90deg,#4285F4,#7C3AED);font-size:10px;font-weight:700;color:#fff;padding:3px 10px;border-radius:12px}
+.pgmc-body{padding:18px 20px}
+.pgmc-top-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.pgmc-cutoff-section h4,.pgmc-rank-section h4{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#6b7a9a;margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.pgmc-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.pgmc-cat-box{text-align:center;padding:10px 6px;border-radius:7px}
+.pgmc-cat-box.ur{background:#f5f3ff;border:1px solid #ddd6fe}
+.pgmc-cat-box.obc{background:#fffbeb;border:1px solid #fde68a}
+.pgmc-cat-box.sc{background:#f0fdf4;border:1px solid #bbf7d0}
+.pgmc-cat-box.st{background:#fff1f2;border:1px solid #fecaca}
+.pcb-cat{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.ur .pcb-cat{color:#5b21b6}.obc .pcb-cat{color:#92400e}.sc .pcb-cat{color:#166534}.st .pcb-cat{color:#991b1b}
+.pcb-val{font-size:16px;font-weight:900;line-height:1}
+.ur .pcb-val{color:#7C3AED}.obc .pcb-val{color:#f59e0b}.sc .pcb-val{color:#22c55e}.st .pcb-val{color:#ef4444}
+.pcb-sub{font-size:8px;color:#9ba8c0;margin-top:1px}
+.pgmc-rank-table{width:100%;border-collapse:collapse;font-size:11px}
+.pgmc-rank-table th{background:#f5f3ff;color:#5b21b6;padding:6px 8px;text-align:center;font-size:9px;letter-spacing:.3px;text-transform:uppercase;border:1px solid #e0d9fa}
+.pgmc-rank-table td{padding:5px 8px;text-align:center;border:1px solid #f0ecfc;color:#374060}
+.pgmc-rank-table tr:nth-child(even) td{background:#faf8ff}
+.pgmc-rank-table tr:hover td{background:#f0ebff}
+.pgmc-set-pill{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;display:inline-block}
+.ps1{background:#dbeafe;color:#1d4ed8}.ps2{background:#ede9fe;color:#5b21b6}
+.ps3{background:#dcfce7;color:#166534}.ps4{background:#fef9c3;color:#854d0e}.ps5{background:#fee2e2;color:#991b1b}
+.pgmc-rank-section{overflow:auto}
+
+@media print{
+  body{background:#fff!important}
+  .app-header,#view-dashboard,.view:not(.active),.toast{display:none!important}
+  .container{padding:0!important;max-width:100%!important}
+  #view-poster{display:block!important}
+  .poster-root{box-shadow:none!important;max-width:100%!important;border-radius:0!important}
+  .action-row{display:none!important}
+  h2{display:none!important}
+  @page{size:landscape;margin:8mm}
+}
+@media(max-width:700px){
+  .app-header-top{padding:11px 14px}.nav-tabs{padding:0 14px}.container{padding:14px}
+  .mode-selector{flex-direction:column}.pgmc-top-row{grid-template-columns:1fr}.pgmc-cat-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="lo">
+  <div class="loading-box">
+    <div class="spin-big"></div>
+    <h3 id="lo-title">Loading...</h3>
+    <p id="lo-msg">Please wait</p>
+  </div>
+</div>
+
+<header class="app-header">
+  <div class="app-header-top">
+    <div class="brand">
+      <div class="pw-logo">PW</div>
+      <div class="brand-text">
+        <h1>PosterGen Pro</h1>
+        <p>NEET / JEE Paper Analysis Suite</p>
+      </div>
+    </div>
+    <div class="header-badge">⚡ AI-Powered Analysis Tool</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dashboard')" id="tab-dashboard">📊 Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('poster')" id="tab-poster">🖼️ Poster Generator</button>
+  </div>
+</header>
+
+<!-- ======================== DASHBOARD ======================== -->
+<div id="view-dashboard" class="view active">
+  <div class="container">
+    <div class="dash-hero">
+      <div class="hero-glow"></div>
+      <div class="hero-icon">📋</div>
+      <div class="hero-content">
+        <h2>NEET / JEE Paper Analysis Dashboard</h2>
+        <p>Subject sheets + GMC Rank Predictor sheet upload karo. Poster mein dono ka combined professional report milega.</p>
+        <div class="hero-kpi">
+          <div class="kpi"><span class="num" id="kpi-sheets">0</span><span class="lbl">Sheets</span></div>
+          <div class="kpi"><span class="num" id="kpi-qs">0</span><span class="lbl">Questions</span></div>
+          <div class="kpi"><span class="num" id="kpi-dom">—</span><span class="lbl">Dominant</span></div>
+          <div class="kpi"><span class="num" id="kpi-gmc">—</span><span class="lbl">GMC Ready</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode -->
+    <div class="section-card" style="padding:18px">
+      <div class="section-title">🎯 Poster Mode Chuno</div>
+      <div class="mode-selector">
+        <button class="mode-card active" onclick="setMode('merged')" id="mode-merged">
+          <span class="mc-icon">🔀</span><span class="mc-title">Merged Poster</span>
+          <span class="mc-desc">Sabhi subjects ek hi report card mein</span>
+        </button>
+        <button class="mode-card" onclick="setMode('subject')" id="mode-subject">
+          <span class="mc-icon">📄</span><span class="mc-title">Subject-wise</span>
+          <span class="mc-desc">Har subject ka alag poster</span>
+        </button>
+        <button class="mode-card" onclick="setMode('drive')" id="mode-drive">
+          <span class="mc-icon">☁️</span><span class="mc-title">Drive Link se</span>
+          <span class="mc-desc">Google Drive auto detect</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Subject Upload -->
+    <div id="panel-manual">
+      <div class="section-card">
+        <div class="section-title">📁 Subject Sheets Upload Karo</div>
+        <div class="sheets-grid" id="sheets-grid"></div>
+      </div>
+    </div>
+
+    <!-- Drive Panel -->
+    <div id="panel-drive" style="display:none">
+      <div class="section-card">
+        <div class="section-title">☁️ Google Drive se Load Karo</div>
+        <div class="drive-note"><strong>📌 File naming rule:</strong> Files ka naam subject contain kare — <strong>Physics.xlsx</strong>, <strong>Chemistry.xlsx</strong>, <strong>Botany.xlsx</strong>, <strong>Zoology.xlsx</strong>, <strong>Maths.xlsx</strong></div>
+        <div class="drive-row">
+          <div class="form-group"><label>Google Drive Folder Link</label><input type="text" id="drive-link-input" placeholder="https://drive.google.com/drive/folders/..."></div>
+          <button class="btn-fetch" onclick="fetchFromDrive()" id="btn-fetch">☁️ Fetch Files</button>
+        </div>
+        <div id="drive-status-list" class="drive-status-list"></div>
+      </div>
+    </div>
+
+    <!-- GMC Sheet Upload -->
+    <div class="section-card" style="border-color:rgba(124,58,237,0.3)">
+      <div class="section-title">🏥 GMC Rank Predictor Sheet Upload Karo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+        <div>
+          <div class="sheet-slot" id="slot-gmc" style="border-color:rgba(124,58,237,0.3)">
+            <div class="slot-label">🏥 GMC Cutoff + Rank Predictor <span class="sbadge bgmc">GMC</span></div>
+            <div class="drop-area" onclick="triggerUp('gmc')" ondragover="dOver(event,'gmc')" ondragleave="dLeave('gmc')" ondrop="dDrop(event,'gmc')" id="drop-gmc">
+              <div class="drop-icon">📊</div>
+              <div class="drop-text"><strong>Click to upload</strong><br>Rank_Predictor sheet<br><small>.xlsx .xls .csv</small></div>
+            </div>
+            <input type="file" class="hidden-input" id="file-gmc" accept=".xlsx,.xls,.csv" onchange="onFileGmc(event)">
+          </div>
+        </div>
+        <div id="gmc-preview-panel">
+          <div class="gmc-empty-state">
+            <span class="ge-icon">📊</span>
+            <p style="font-size:13px;margin-bottom:4px">GMC Sheet upload hone ke baad</p>
+            <p style="font-size:11px">Cutoff + Rank table yahan dikhega</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exam Details -->
+    <div class="section-card">
+      <div class="section-title">📝 Exam Details</div>
+      <div class="form-row">
+        <div class="form-group"><label>Exam Name</label><input type="text" id="exam-name" placeholder="e.g. NEET 2025 Mock Test 1"></div>
+        <div class="form-group"><label>Date / Session</label><input type="text" id="exam-date" placeholder="e.g. 10 June 2025, Morning"></div>
+        <div class="form-group"><label>Batch / Institute</label><input type="text" id="exam-batch" placeholder="e.g. Lakshya Batch — PW Patna"></div>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <div class="section-card">
+      <div class="section-title">🚀 Generate Poster</div>
+      <div id="dash-stats-row" style="display:none" class="dash-stats">
+        <div class="ds"><span class="num" style="color:var(--easy)" id="dash-easy">0</span><span class="lbl">Easy</span></div>
+        <div class="ds"><span class="num" style="color:var(--medium)" id="dash-med">0</span><span class="lbl">Medium</span></div>
+        <div class="ds"><span class="num" style="color:var(--hard)" id="dash-hard">0</span><span class="lbl">Hard</span></div>
+        <div class="ds"><span class="num" style="color:var(--acc-light)" id="dash-ch">0</span><span class="lbl">Chapters</span></div>
+      </div>
+      <div class="action-row">
+        <button class="btn-primary" onclick="generatePoster()">🎯 Generate Poster</button>
+        <button class="btn-sec" onclick="exportPNG()">⬇️ Export PNG</button>
+        <button class="btn-sec" onclick="printPoster()">🖨️ Print</button>
+        <button class="btn-sec" onclick="exportPDF()">📄 Save PDF</button>
+        <button class="btn-sec" onclick="switchTab('poster')">🖼️ View Poster</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== POSTER VIEW ======================== -->
+<div id="view-poster" class="view">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+      <h2 style="font-size:17px;font-weight:700">🖼️ Poster Preview</h2>
+      <div class="action-row">
+        <button class="btn-primary" onclick="generatePoster()">🔄 Regenerate</button>
+        <button class="btn-sec" onclick="exportPNG()">⬇️ Export PNG</button>
+        <button class="btn-sec" onclick="printPoster()">🖨️ Print</button>
+        <button class="btn-sec" onclick="exportPDF()">📄 Save PDF</button>
+        <button class="btn-sec" onclick="switchTab('dashboard')">← Back</button>
+      </div>
+    </div>
+    <div id="poster-container">
+      <div class="poster-empty">
+        <div class="poster-empty-icon">🖼️</div>
+        <p style="font-size:15px;margin-bottom:6px">Abhi koi poster nahi hai</p>
+        <p style="font-size:12px">Dashboard mein sheets upload karo aur Generate dabao</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUBJECTS=[
+  {id:'physics',name:'Physics',emoji:'⚛️',bc:'bp',color:'#3b82f6',headBg:'#1e3a8a',icon:'🔬',keywords:['physics','phy']},
+  {id:'chemistry',name:'Chemistry',emoji:'🧪',bc:'bc',color:'#f59e0b',headBg:'#78350f',icon:'⚗️',keywords:['chemistry','chem','che']},
+  {id:'botany',name:'Botany',emoji:'🌱',bc:'bb',color:'#22c55e',headBg:'#14532d',icon:'🪴',keywords:['botany','bot','plant']},
+  {id:'zoology',name:'Zoology',emoji:'🐾',bc:'bz',color:'#f97316',headBg:'#7c2d12',icon:'🦁',keywords:['zoology','zoo','zool','animal']},
+  {id:'maths',name:'Maths',emoji:'📐',bc:'bm',color:'#a855f7',headBg:'#4c1d95',icon:'📊',keywords:['maths','math','mathematics']},
+];
+
+let state={
+  mode:'merged',
+  sheets:{physics:null,chemistry:null,botany:null,zoology:null,maths:null},
+  gmcData:null
+};
+
+function init(){buildSlots()}
+
+function switchTab(t){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+function setMode(m){
+  state.mode=m;
+  ['merged','subject','drive'].forEach(id=>document.getElementById('mode-'+id).classList.toggle('active',id===m));
+  document.getElementById('panel-manual').style.display=(m==='drive')?'none':'block';
+  document.getElementById('panel-drive').style.display=(m==='drive')?'block':'none';
+}
+
+function buildSlots(){
+  document.getElementById('sheets-grid').innerHTML=SUBJECTS.map(s=>`
+    <div class="sheet-slot" id="slot-${s.id}">
+      <div class="slot-label">${s.emoji} ${s.name}<span class="sbadge ${s.bc}">${s.name}</span></div>
+      <div class="drop-area" onclick="triggerUp('${s.id}')" ondragover="dOver(event,'${s.id}')" ondragleave="dLeave('${s.id}')" ondrop="dDrop(event,'${s.id}')" id="drop-${s.id}">
+        <div class="drop-icon">📂</div>
+        <div class="drop-text"><strong>Click to upload</strong><br>ya drag &amp; drop karo<br><small>.xlsx .xls .csv</small></div>
+      </div>
+      <input type="file" class="hidden-input" id="file-${s.id}" accept=".xlsx,.xls,.csv" onchange="onFile(event,'${s.id}')">
+    </div>`).join('');
+}
+
+function triggerUp(s){document.getElementById('file-'+s).click()}
+function dOver(e,s){e.preventDefault();document.getElementById('slot-'+s).classList.add('dragging')}
+function dLeave(s){document.getElementById('slot-'+s).classList.remove('dragging')}
+function dDrop(e,s){e.preventDefault();dLeave(s);const f=e.dataTransfer.files[0];if(f)(s==='gmc'?procGmcFile(f):procFile(f,s))}
+function onFile(e,s){const f=e.target.files[0];if(f)procFile(f,s)}
+function onFileGmc(e){const f=e.target.files[0];if(f)procGmcFile(f)}
+
+function procFile(file,subj){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      state.sheets[subj]={file:file.name,rows,subject:subj};
+      setSlotFilled(subj,file.name,rows.length);
+      refreshStats();
+      toast('✅ '+subj+' loaded ('+rows.length+' rows)');
+    }catch(e){toast('❌ File error!',true)}
+  };
+  r.readAsBinaryString(file);
+}
+
+function setSlotFilled(subj,fname,cnt){
+  document.getElementById('slot-'+subj).classList.add('has-file');
+  document.getElementById('drop-'+subj).innerHTML=`
+    <div class="file-chosen">
+      <span style="font-size:24px">📊</span>
+      <div class="fi-info"><div class="fi-name">${fname}</div><div class="fi-rows">${cnt} questions</div></div>
+      <button class="rm-btn" onclick="rmSheet('${subj}',event)">✕</button>
+    </div>`;
+}
+
+function rmSheet(subj,e){
+  e.stopPropagation();state.sheets[subj]=null;
+  document.getElementById('slot-'+subj).classList.remove('has-file');
+  buildSlots();refreshStats();
+}
+
+/* ===== GMC FILE PARSING ===== */
+function procGmcFile(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      // Get raw 2D array
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const parsed=parseGmcSheet(raw);
+      state.gmcData=parsed;
+      document.getElementById('slot-gmc').classList.add('has-file');
+      document.getElementById('drop-gmc').innerHTML=`
+        <div class="file-chosen">
+          <span style="font-size:24px">🏥</span>
+          <div class="fi-info"><div class="fi-name">${file.name}</div><div class="fi-rows">GMC data parsed ✅</div></div>
+          <button class="rm-btn" onclick="rmGmc(event)">✕</button>
+        </div>`;
+      renderGmcPreview(parsed);
+      document.getElementById('kpi-gmc').textContent='✅';
+      toast('✅ GMC Rank Predictor sheet loaded!');
+    }catch(err){toast('❌ GMC file parse error: '+err.message,true);console.error(err)}
+  };
+  r.readAsBinaryString(file);
+}
+
+function rmGmc(e){
+  e.stopPropagation();state.gmcData=null;
+  document.getElementById('slot-gmc').classList.remove('has-file');
+  document.getElementById('drop-gmc').innerHTML=`
+    <div class="drop-icon">📊</div>
+    <div class="drop-text"><strong>Click to upload</strong><br>Rank_Predictor sheet<br><small>.xlsx .xls .csv</small></div>`;
+  document.getElementById('gmc-preview-panel').innerHTML=`
+    <div class="gmc-empty-state"><span class="ge-icon">📊</span><p style="font-size:13px;margin-bottom:4px">GMC Sheet upload hone ke baad</p><p style="font-size:11px">Cutoff + Rank table yahan dikhega</p></div>`;
+  document.getElementById('kpi-gmc').textContent='—';
+}
+
+function parseGmcSheet(raw){
+  // Parse cutoff: rows 12-16 (0-indexed), col 0=category, col 1=cutoff
+  const cutoffs={};
+  const catMap={'UR':'UR','OBC':'OBC','SC':'SC','ST':'ST'};
+  for(let i=0;i<raw.length;i++){
+    const row=raw[i];
+    const cat=String(row[0]||'').trim().toUpperCase();
+    const val=String(row[1]||'').trim();
+    if(catMap[cat]&&val&&val.includes('marks')){
+      cutoffs[cat]=val.replace('marks','').replace('≈','~').trim();
+    }
+  }
+
+  // Parse rank prediction: cols 3-8 = AIR target + Set1-5 min marks (rows 3-9)
+  const rankRows=[];
+  // Header row tells us: col3=NEET AIR, col4=Set1, col5=Set2, col6=Set3, col7=Set4, col8=Set5
+  for(let i=2;i<raw.length;i++){
+    const row=raw[i];
+    const air=String(row[3]||'').trim();
+    const s1=String(row[4]||'').trim();
+    const s2=String(row[5]||'').trim();
+    const s3=String(row[6]||'').trim();
+    const s4=String(row[7]||'').trim();
+    const s5=String(row[8]||'').trim();
+    if(air&&air.toLowerCase().startsWith('under')&&s1){
+      rankRows.push({air,s1,s2,s3,s4,s5});
+    }
+  }
+
+  // Parse min marks needed (cols 0-1): rows 3-9
+  const minMarks=[];
+  for(let i=2;i<raw.length;i++){
+    const row=raw[i];
+    const air=String(row[0]||'').trim();
+    const marks=String(row[1]||'').trim();
+    if(air&&air.toLowerCase().startsWith('under')&&marks){
+      minMarks.push({air,marks});
+    }
+  }
+
+  // Exam title from row 0
+  const title=String(raw[0]?raw[0][0]||'':'').split('|').map(s=>s.trim()).filter(Boolean);
+  const examMeta=title.slice(0,4).join(' | ');
+
+  return{cutoffs,rankRows,minMarks,examMeta};
+}
+
+function renderGmcPreview(data){
+  const {cutoffs,rankRows,minMarks,examMeta}=data;
+  const catOrder=['UR','OBC','SC','ST'];
+  const catConfig={
+    UR:{cls:'ur',label:'UR / General',emoji:'🔵'},
+    OBC:{cls:'obc',label:'OBC',emoji:'🟡'},
+    SC:{cls:'sc',label:'SC',emoji:'🟢'},
+    ST:{cls:'st',label:'ST',emoji:'🔴'}
+  };
+
+  const cutoffCards=catOrder.map(cat=>{
+    const cfg=catConfig[cat];
+    const val=cutoffs[cat]||'—';
+    return `<div class="gmc-cat-card ${cfg.cls}">
+      <div class="gcc-label">${cfg.emoji} ${cfg.label}</div>
+      <div class="gcc-value">${val}</div>
+      <div class="gcc-sub">Min Marks</div>
+    </div>`;
+  }).join('');
+
+  const rankTableRows=rankRows.map(r=>`
+    <tr>
+      <td style="font-weight:700;color:#374060">${r.air}</td>
+      <td><span class="set-tag s1">${r.s1}</span></td>
+      <td><span class="set-tag s2">${r.s2}</span></td>
+      <td><span class="set-tag s3">${r.s3}</span></td>
+      <td><span class="set-tag s4">${r.s4}</span></td>
+      <td><span class="set-tag s5">${r.s5}</span></td>
+    </tr>`).join('');
+
+  document.getElementById('gmc-preview-panel').innerHTML=`
+    <div class="gmc-preview-card">
+      <div class="gmc-preview-header">
+        <div class="gmc-dot"></div>
+        <h4>GMC Cutoff &amp; Rank Preview</h4>
+        <span style="font-size:11px;color:var(--text-muted)">${examMeta||'Maha NEET'}</span>
+      </div>
+      <div class="gmc-status-badge">✅ Data Loaded — Poster mein shamil hoga</div>
+      <div style="font-size:10px;font-weight:700;color:var(--acc-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏥 GMC Category-wise Cutoff</div>
+      <div class="gmc-cutoff-grid">${cutoffCards}</div>
+      <div style="font-size:10px;font-weight:700;color:var(--acc-light);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">🏆 Rank Prediction (Min Marks for AIR Target)</div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead><tr><th>AIR Target</th><th>Set 1</th><th>Set 2</th><th>Set 3</th><th>Set 4</th><th>Set 5</th></tr></thead>
+          <tbody>${rankTableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ===== ANALYSIS ===== */
+function analyse(rows){
+  let easy=[],medium=[],hard=[],chMap={};
+  rows.forEach((r,i)=>{
+    const qno=r.Q_No||r.q_no||r['Q No']||r['Question No']||r.QNo||r['Sr No']||r['S.No']||(i+1);
+    const chapter=String(r.Chapter||r.chapter||r.Topic||r.Unit||'Unknown').trim();
+    const raw2=String(r.Difficulty||r.difficulty||r.Level||r.Type||'').trim().toLowerCase();
+    chMap[chapter]=(chMap[chapter]||0)+1;
+    if(raw2==='easy'||raw2==='e'||raw2==='1') easy.push(qno);
+    else if(raw2==='hard'||raw2==='h'||raw2==='3') hard.push(qno);
+    else medium.push(qno);
+  });
+  return{easy,medium,hard,chMap,total:rows.length};
+}
+
+function refreshStats(){
+  let tQ=0,tE=0,tM=0,tH=0,n=0,ch=new Set();
+  Object.values(state.sheets).forEach(s=>{
+    if(!s)return;n++;
+    const a=analyse(s.rows);
+    tQ+=a.total;tE+=a.easy.length;tM+=a.medium.length;tH+=a.hard.length;
+    Object.keys(a.chMap).forEach(c=>ch.add(c));
+  });
+  document.getElementById('kpi-sheets').textContent=n;
+  document.getElementById('kpi-qs').textContent=tQ;
+  document.getElementById('kpi-dom').textContent=n?(tE>=tM&&tE>=tH?'Easy':tM>=tH?'Medium':'Hard'):'—';
+  const row=document.getElementById('dash-stats-row');
+  if(n>0){
+    row.style.display='grid';
+    document.getElementById('dash-easy').textContent=tE;
+    document.getElementById('dash-med').textContent=tM;
+    document.getElementById('dash-hard').textContent=tH;
+    document.getElementById('dash-ch').textContent=ch.size;
+  }else row.style.display='none';
+}
+
+/* ===== DRIVE FETCH ===== */
+async function fetchFromDrive(){
+  const raw=document.getElementById('drive-link-input').value.trim();
+  if(!raw){toast('⚠️ Drive link daalo!',true);return}
+  let fid=null;
+  const m1=raw.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  const m2=raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(m1)fid=m1[1];else if(m2)fid=m2[1];
+  else if(/^[a-zA-Z0-9_-]{20,}$/.test(raw))fid=raw;
+  if(!fid){toast('❌ Valid folder link nahi hai!',true);return}
+  showLoad('☁️ Drive folder scan ho raha hai...','Subject Excel files dhundh rahe hain');
+  document.getElementById('btn-fetch').disabled=true;
+  document.getElementById('drive-status-list').innerHTML='';
+  Object.keys(state.sheets).forEach(k=>state.sheets[k]=null);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:`Find Excel/CSV files. Respond ONLY JSON: {"files":[{"fileId":"...","name":"...","subject":"physics|chemistry|botany|zoology|maths"}],"error":null}`,
+        messages:[{role:'user',content:'Find subject Excel files in Drive folder ID: '+fid}],
+        mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'gdrive'}]
+      })
+    });
+    const data=await res.json();
+    let txt='';
+    if(data.content)data.content.forEach(item=>{if(item.type==='text')txt+=item.text});
+    let parsed=null;
+    try{const jm=txt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);if(jm)parsed=JSON.parse(jm[0])}catch(e){}
+    if(!parsed||!parsed.files||!parsed.files.length){hideLoad();renderDriveErr('Koi subject file nahi mili.');document.getElementById('btn-fetch').disabled=false;return;}
+    const sl=document.getElementById('drive-status-list');
+    for(const fi of parsed.files){
+      setLoad('📥 "'+fi.name+'" download ho rahi hai...','Parse kar rahe hain...');
+      const row=makeDriveRow(fi);sl.appendChild(row);
+      try{
+        const dr=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            model:'claude-sonnet-4-20250514',max_tokens:8000,
+            system:`Parse file. Return ONLY JSON: {"rows":[{"Q_No":1,"Chapter":"Name","Difficulty":"Easy|Medium|Hard"}],"error":null}`,
+            messages:[{role:'user',content:'Download and parse file ID: '+fi.fileId+' name: '+fi.name}],
+            mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'gdrive'}]
+          })
+        });
+        const dd=await dr.json();
+        let dt='';if(dd.content)dd.content.forEach(i=>{if(i.type==='text')dt+=i.text});
+        let dp=null;
+        try{const jm=dt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);if(jm)dp=JSON.parse(jm[0])}catch(e){}
+        if(dp&&dp.rows&&dp.rows.length){
+          state.sheets[fi.subject]={file:fi.name,rows:dp.rows,subject:fi.subject};
+          row.className='dfile-row ok';row.querySelector('.dbadge').textContent='✅ '+dp.rows.length+' Qs';row.querySelector('.dbadge').className='dbadge dbadge-ok';row.querySelector('.dfile-sub').textContent=dp.rows.length+' questions loaded';
+        }else{row.className='dfile-row err';row.querySelector('.dbadge').textContent='❌ Parse Error';row.querySelector('.dbadge').className='dbadge dbadge-err';}
+      }catch(e){row.className='dfile-row err';row.querySelector('.dbadge').textContent='❌ Error';row.querySelector('.dbadge').className='dbadge dbadge-err';}
+    }
+    hideLoad();refreshStats();document.getElementById('btn-fetch').disabled=false;
+    const ln=Object.values(state.sheets).filter(Boolean).length;
+    toast(ln>0?'✅ '+ln+' subjects load ho gaye!':'⚠️ Koi file load nahi hui.',!ln);
+  }catch(e){hideLoad();document.getElementById('btn-fetch').disabled=false;renderDriveErr('Connection error: '+e.message);toast('❌ Drive connect nahi ho saka!',true);}
+}
+function makeDriveRow(fi){const s=SUBJECTS.find(x=>x.id===fi.subject)||{emoji:'📄'};const d=document.createElement('div');d.className='dfile-row';d.innerHTML=`<span style="font-size:20px">${s.emoji}</span><div class="dfile-info"><div class="dfile-name">${fi.name}</div><div class="dfile-sub">Downloading...</div></div><span class="dbadge dbadge-wait">⏳ Loading</span>`;return d;}
+function renderDriveErr(msg){document.getElementById('drive-status-list').innerHTML=`<div class="dfile-row err"><span style="font-size:20px">⚠️</span><div class="dfile-info"><div class="dfile-name">Error</div><div class="dfile-sub">${msg}</div></div></div>`;}
+
+/* ===== DONUT ===== */
+function makeDonut(easy,medium,hard,total){
+  if(total===0)return`<svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="#e8ecf4" stroke-width="12"/></svg>`;
+  const r=28,cx=40,cy=40,circ=2*Math.PI*r;
+  const eA=easy/total,mA=medium/total;
+  const eD=eA*circ,mD=mA*circ,hD=(hard/total)*circ;
+  let offset=0,segs=[];
+  if(easy>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="${eD} ${circ-eD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`);offset+=eA;}
+  if(medium>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="${mD} ${circ-mD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`);offset+=mA;}
+  if(hard>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="${hD} ${circ-hD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`)}
+  return`<svg width="80" height="80" viewBox="0 0 80 80">${segs.join('')}<text x="40" y="44" text-anchor="middle" font-size="12" font-weight="800" fill="#1a2744">${total}</text></svg>`;
+}
+
+function trendArrow(pct,type){
+  let arrow,cls;
+  if(type==='easy'){arrow=pct>=50?'▲':pct>=30?'▶':'▼';cls=pct>=50?'trend-down':pct>=30?'trend-neutral':'trend-up';}
+  else if(type==='hard'){arrow=pct>=40?'▲':pct>=20?'▶':'▼';cls=pct>=40?'trend-up':pct>=20?'trend-neutral':'trend-down';}
+  else{arrow=pct>=40?'▲':'▼';cls='trend-neutral';}
+  return`<span class="trend-arrow ${cls}">${arrow} ${pct}%</span>`;
+}
+
+/* ===== SUBJECT CARD ===== */
+function buildSubjCard(subj,analysis,color,headBg){
+  const s=SUBJECTS.find(x=>x.id===subj);
+  const {easy,medium,hard,total}=analysis;
+  const eP=total?Math.round(easy.length/total*100):0;
+  const mP=total?Math.round(medium.length/total*100):0;
+  const hP=total?Math.round(hard.length/total*100):0;
+  const sorted=[...easy.map(q=>({q,d:'easy'})),...medium.map(q=>({q,d:'medium'})),...hard.map(q=>({q,d:'hard'}))].sort((a,b)=>(parseInt(a.q)||0)-(parseInt(b.q)||0)).slice(0,45);
+  const qMapHtml=sorted.map(({q,d})=>`<div class="qc qc-${d}">${q}</div>`).join('');
+  const donutSvg=makeDonut(easy.length,medium.length,hard.length,total);
+  const eChips=easy.map(q=>`<span class="qchip qchip-easy">Q${q}</span>`).join('')||'<span class="qnone">None</span>';
+  const mChips=medium.map(q=>`<span class="qchip qchip-medium">Q${q}</span>`).join('')||'<span class="qnone">None</span>';
+  const hChips=hard.map(q=>`<span class="qchip qchip-hard">Q${q}</span>`).join('')||'<span class="qnone">None</span>';
+  return`
+    <div class="subj-card" style="border-top:4px solid ${color}">
+      <div class="subj-card-head" style="background:${headBg}">
+        <div class="subj-card-title">${s.icon} ${s.name}</div>
+        <div class="subj-card-count">${total} Questions</div>
+      </div>
+      <div style="display:flex;gap:0">
+        <div style="width:215px;flex-shrink:0;padding:14px 16px;border-right:2px solid #e8ecf4;display:flex;flex-direction:column;gap:10px;background:${headBg}10">
+          <div style="display:flex;justify-content:space-around;padding-bottom:10px;border-bottom:1px solid #e8ecf4">
+            <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#22c55e;line-height:1">${easy.length}</div><div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;margin:2px 0">Easy</div>${trendArrow(eP,'easy')}</div>
+            <div style="width:1px;background:#e8ecf4"></div>
+            <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#f59e0b;line-height:1">${medium.length}</div><div style="font-size:9px;font-weight:700;color:#854d0e;text-transform:uppercase;margin:2px 0">Med</div>${trendArrow(mP,'medium')}</div>
+            <div style="width:1px;background:#e8ecf4"></div>
+            <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#ef4444;line-height:1">${hard.length}</div><div style="font-size:9px;font-weight:700;color:#991b1b;text-transform:uppercase;margin:2px 0">Hard</div>${trendArrow(hP,'hard')}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            ${donutSvg}
+            <div style="width:100%">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block"></span><span style="flex:1;font-weight:600">Easy</span><div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${eP}%;height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:3px"></div></div><span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${easy.length}</span></div>
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span><span style="flex:1;font-weight:600">Med</span><div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${mP}%;height:100%;background:linear-gradient(90deg,#fcd34d,#f59e0b);border-radius:3px"></div></div><span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${medium.length}</span></div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#374060"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;flex-shrink:0;display:inline-block"></span><span style="flex:1;font-weight:600">Hard</span><div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${hP}%;height:100%;background:linear-gradient(90deg,#f87171,#ef4444);border-radius:3px"></div></div><span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${hard.length}</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗺️ Question Map</div>
+            <div class="q-grid-poster">${qMapHtml}</div>
+          </div>
+          <div style="border-top:1px solid #e8ecf4;padding-top:10px">
+            <div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">📋 Question Numbers</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <div style="background:#f0fdf4;border-radius:6px;padding:8px"><div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#166534">🟢 Easy (${easy.length})</div><div class="qnum-chips">${eChips}</div></div>
+              <div style="background:#fefce8;border-radius:6px;padding:8px"><div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#854d0e">🟡 Medium (${medium.length})</div><div class="qnum-chips">${mChips}</div></div>
+              <div style="background:#fff1f2;border-radius:6px;padding:8px"><div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#991b1b">🔴 Hard (${hard.length})</div><div class="qnum-chips">${hChips}</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ===== GMC POSTER SECTION ===== */
+function buildGmcPosterSection(gmc){
+  if(!gmc)return'';
+  const {cutoffs,rankRows,minMarks,examMeta}=gmc;
+  const catOrder=['UR','OBC','SC','ST'];
+  const catLabels={UR:'UR / General',OBC:'OBC',SC:'SC',ST:'ST'};
+  const catCls={UR:'ur',OBC:'obc',SC:'sc',ST:'st'};
+
+  const cutoffBoxes=catOrder.map(cat=>{
+    const val=cutoffs[cat]||'—';
+    return`<div class="pgmc-cat-box ${catCls[cat]}">
+      <div class="pcb-cat">${catLabels[cat]}</div>
+      <div class="pcb-val">${val}</div>
+      <div class="pcb-sub">Min Marks</div>
+    </div>`;
+  }).join('');
+
+  const psCls=['ps1','ps2','ps3','ps4','ps5'];
+  const rankTableRows=rankRows.map(r=>`
+    <tr>
+      <td style="font-weight:700;color:#374060;font-size:11px">${r.air}</td>
+      <td><span class="pgmc-set-pill ps1">${r.s1||'—'}</span></td>
+      <td><span class="pgmc-set-pill ps2">${r.s2||'—'}</span></td>
+      <td><span class="pgmc-set-pill ps3">${r.s3||'—'}</span></td>
+      <td><span class="pgmc-set-pill ps4">${r.s4||'—'}</span></td>
+      <td><span class="pgmc-set-pill ps5">${r.s5||'—'}</span></td>
+    </tr>`).join('');
+
+  const minMarksRows=minMarks.map(m=>`
+    <tr><td style="font-weight:600;color:#374060;font-size:11px">${m.air}</td><td style="font-weight:800;color:#7C3AED;font-size:12px">${m.marks}</td></tr>`).join('');
+
+  return`
+    <div class="poster-gmc-wrap">
+      <div class="pgmc-header">
+        <span style="font-size:22px">🏥</span>
+        <h3>GMC Cutoff &amp; Rank Prediction</h3>
+        <span class="pgmc-badge">Maha NEET ${examMeta?'| '+examMeta:''}</span>
+      </div>
+      <div class="pgmc-body">
+        <div class="pgmc-top-row">
+          <div class="pgmc-cutoff-section">
+            <h4>🏥 GMC Category-wise Predicted Cutoff</h4>
+            <div class="pgmc-cat-row">${cutoffBoxes}</div>
+            <p style="font-size:9px;color:#9ba8c0;margin-top:6px">* Predicted MAHA-NEET Cutoff based on previous year trends</p>
+          </div>
+          <div class="pgmc-rank-section">
+            <h4>📊 Min Marks Needed (vs NEET AIR Target)</h4>
+            <table class="pgmc-rank-table">
+              <thead><tr><th>AIR Target</th><th>Min Marks</th></tr></thead>
+              <tbody>${minMarksRows}</tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h4 style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#6b7a9a;margin-bottom:8px;display:flex;align-items:center;gap:5px">🏆 Rank Prediction — Min Marks Required per Set (AIR Target × Set)</h4>
+          <table class="pgmc-rank-table" style="width:100%">
+            <thead>
+              <tr>
+                <th>AIR Target</th>
+                <th><span class="pgmc-set-pill ps1">Set 1</span></th>
+                <th><span class="pgmc-set-pill ps2">Set 2</span></th>
+                <th><span class="pgmc-set-pill ps3">Set 3</span></th>
+                <th><span class="pgmc-set-pill ps4">Set 4</span></th>
+                <th><span class="pgmc-set-pill ps5">Set 5</span></th>
+              </tr>
+            </thead>
+            <tbody>${rankTableRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ===== GENERATE POSTER ===== */
+function generatePoster(){
+  const loaded=Object.entries(state.sheets).filter(([,v])=>v!==null);
+  if(!loaded.length&&!state.gmcData){toast('⚠️ Koi bhi sheet upload nahi ki!',true);return}
+
+  const examName=document.getElementById('exam-name').value||'NEET/JEE Paper Analysis';
+  const examDate=document.getElementById('exam-date').value||'';
+  const examBatch=document.getElementById('exam-batch').value||'';
+
+  const chips=[
+    examDate?`<span class="pr-meta-chip">📅 ${examDate}</span>`:'',
+    examBatch?`<span class="pr-meta-chip">🏛️ ${examBatch}</span>`:'',
+    loaded.length>0?`<span class="pr-meta-chip">📚 ${loaded.length} Subjects</span>`:'',
+    state.gmcData?`<span class="pr-meta-chip">🏥 GMC Cutoff</span>`:'',
+  ].filter(Boolean).join('');
+
+  const cardsHtml=loaded.map(([subj,sh])=>{
+    const s=SUBJECTS.find(x=>x.id===subj);
+    return buildSubjCard(subj,analyse(sh.rows),s.color,s.headBg);
+  }).join('');
+
+  const gmcSection=buildGmcPosterSection(state.gmcData);
+  const ts=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  document.getElementById('poster-container').innerHTML=`
+    <div class="poster-root" id="poster-output">
+      <div class="pr-header">
+        <div class="pr-header-left">
+          <div class="pr-logo">PW</div>
+          <div>
+            <div class="pr-title">${examName}</div>
+            <div class="pr-subtitle">Question-wise Difficulty Tagging &amp; GMC Rank Prediction Report</div>
+          </div>
+        </div>
+        <div class="pr-meta">${chips}</div>
+      </div>
+      <div class="pr-body">
+        ${cardsHtml?`<div class="pr-subjects">${cardsHtml}</div>`:''}
+        ${gmcSection}
+      </div>
+      <div class="pr-footer">
+        <div class="pr-footer-brand">⚡ PosterGen Pro — PW Analysis Suite</div>
+        <div class="pr-legend">
+          <div class="pr-leg-item"><div class="pr-leg-dot" style="background:#22c55e"></div>Easy</div>
+          <div class="pr-leg-item"><div class="pr-leg-dot" style="background:#f59e0b"></div>Medium</div>
+          <div class="pr-leg-item"><div class="pr-leg-dot" style="background:#ef4444"></div>Hard</div>
+          ${state.gmcData?'<div class="pr-leg-item"><div class="pr-leg-dot" style="background:#7C3AED"></div>GMC Cutoff</div>':''}
+        </div>
+        <div style="color:rgba(255,255,255,0.4)">Generated: ${ts}</div>
+      </div>
+    </div>`;
+
+  switchTab('poster');
+  toast('✅ Poster ready!'+(state.gmcData?' GMC data included!':''));
+}
+
+/* ===== EXPORT ===== */
+function exportPNG(){
+  const el=document.getElementById('poster-output');
+  if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+  toast('⏳ Export ho raha hai...');
+  html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true}).then(c=>{
+    const a=document.createElement('a');a.download='PosterGen_Analysis.png';a.href=c.toDataURL('image/png');a.click();
+    toast('✅ Download ho gaya!');
+  }).catch(()=>toast('❌ Export failed!',true));
+}
+
+function printPoster(){
+  const el=document.getElementById('poster-output');
+  if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>PosterGen Print</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+    @page{size:landscape;margin:6mm}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    .trend-arrow{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:12px}
+    .trend-up{background:#fee2e2;color:#b91c1c}.trend-down{background:#dcfce7;color:#15803d}.trend-neutral{background:#f1f5f9;color:#64748b}
+    .qc{width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin:2px}
+    .qc-easy{background:#dcfce7;color:#166534}.qc-medium{background:#fef9c3;color:#854d0e}.qc-hard{background:#fee2e2;color:#991b1b}
+    .qnum-chips{display:flex;flex-wrap:wrap;gap:3px}.qchip{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px}
+    .qchip-easy{background:#dcfce7;color:#166534}.qchip-medium{background:#fef9c3;color:#854d0e}.qchip-hard{background:#fee2e2;color:#991b1b}
+    .qnone{font-size:10px;color:#c0c8d8;font-style:italic}.q-grid-poster{display:flex;flex-wrap:wrap;gap:2px}
+    .pgmc-set-pill{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;display:inline-block}
+    .ps1{background:#dbeafe;color:#1d4ed8}.ps2{background:#ede9fe;color:#5b21b6}.ps3{background:#dcfce7;color:#166534}.ps4{background:#fef9c3;color:#854d0e}.ps5{background:#fee2e2;color:#991b1b}
+    .pgmc-cat-box{text-align:center;padding:10px 6px;border-radius:7px}
+    .pgmc-cat-box.ur{background:#f5f3ff;border:1px solid #ddd6fe}.pgmc-cat-box.obc{background:#fffbeb;border:1px solid #fde68a}
+    .pgmc-cat-box.sc{background:#f0fdf4;border:1px solid #bbf7d0}.pgmc-cat-box.st{background:#fff1f2;border:1px solid #fecaca}
+    .pcb-cat{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+    .ur .pcb-cat{color:#5b21b6}.obc .pcb-cat{color:#92400e}.sc .pcb-cat{color:#166534}.st .pcb-cat{color:#991b1b}
+    .pcb-val{font-size:16px;font-weight:900;line-height:1}
+    .ur .pcb-val{color:#7C3AED}.obc .pcb-val{color:#f59e0b}.sc .pcb-val{color:#22c55e}.st .pcb-val{color:#ef4444}
+    .pcb-sub{font-size:8px;color:#9ba8c0;margin-top:1px}
+    .pgmc-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+    .pgmc-rank-table{width:100%;border-collapse:collapse;font-size:11px}
+    .pgmc-rank-table th{background:#f5f3ff;color:#5b21b6;padding:6px 8px;text-align:center;font-size:9px;text-transform:uppercase;border:1px solid #e0d9fa}
+    .pgmc-rank-table td{padding:5px 8px;text-align:center;border:1px solid #f0ecfc;color:#374060}
+    .pgmc-rank-table tr:nth-child(even) td{background:#faf8ff}
+    .pgmc-badge{background:linear-gradient(90deg,#4285F4,#7C3AED);font-size:10px;font-weight:700;color:#fff;padding:3px 10px;border-radius:12px}
+    </style></head><body>${el.outerHTML}</body></html>`);
+  win.document.close();
+  win.onload=()=>{win.focus();win.print();}
+  toast('🖨️ Print dialog khul raha hai...');
+}
+
+function exportPDF(){
+  const el=document.getElementById('poster-output');
+  if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+  toast('⏳ PDF ban raha hai...');
+  html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true}).then(c=>{
+    const imgData=c.toDataURL('image/png');
+    const win=window.open('','_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>PosterGen PDF</title><style>*{margin:0;padding:0}body{background:#fff}@page{size:landscape;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}img{width:100%;height:auto;display:block}</style></head><body><img src="${imgData}"></body></html>`);
+    win.document.close();win.onload=()=>{win.focus();win.print();}
+    toast('📄 PDF ke liye print dialog — "Save as PDF" choose karo!');
+  }).catch(()=>toast('❌ PDF failed!',true));
+}
+
+function showLoad(t,m){document.getElementById('lo-title').textContent=t;document.getElementById('lo-msg').textContent=m;document.getElementById('lo').style.display='flex'}
+function setLoad(t,m){document.getElementById('lo-title').textContent=t;document.getElementById('lo-msg').textContent=m}
+function hideLoad(){document.getElementById('lo').style.display='none'}
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=err?'#ef4444':'#22c55e';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+init();
+</script>
+</body>
+</html>
