@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PosterGen Pro — NEET/JEE Paper Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+--pw-orange:#FF6B00;--pw-orange-light:#FF8C33;
+--pw-dark:#0F0F1A;--pw-card:#1A1A2E;
+--pw-border:rgba(255,107,0,0.25);
+--easy:#22c55e;--medium:#f59e0b;--hard:#ef4444;
+--text:#e2e8f0;--text-muted:#94a3b8;--radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--pw-dark);color:var(--text);min-height:100vh}
+.app-header{background:linear-gradient(135deg,#0F0F1A,#1A1A2E);border-bottom:1px solid var(--pw-border);position:sticky;top:0;z-index:100}
+.app-header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:12px}
+.pw-logo{background:var(--pw-orange);color:#fff;font-weight:900;font-size:17px;padding:7px 13px;border-radius:8px;letter-spacing:1px;box-shadow:0 0 18px rgba(255,107,0,.4)}
+.brand-text h1{font-size:19px;font-weight:700;background:linear-gradient(90deg,#FF6B00,#FFB347);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-text p{font-size:11px;color:var(--text-muted)}
+.header-badge{background:rgba(255,107,0,.1);border:1px solid var(--pw-border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--pw-orange-light);font-weight:500}
+.nav-tabs{display:flex;border-top:1px solid var(--pw-border);padding:0 32px}
+.nav-tab{padding:11px 26px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;background:none;border-left:none;border-right:none;border-top:none;outline:none}
+.nav-tab.active{color:var(--pw-orange);border-bottom-color:var(--pw-orange);background:rgba(255,107,0,.05)}
+.nav-tab:hover{color:var(--text)}
+.view{display:none}.view.active{display:block}
+.container{max-width:1300px;margin:0 auto;padding:24px 32px}
+.section-card{background:var(--pw-card);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+.section-title{font-size:12px;font-weight:700;color:var(--pw-orange);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--pw-border)}
+.dash-hero{background:linear-gradient(135deg,#1A1A2E,#16213E,#0D1B2A);border:1px solid var(--pw-border);border-radius:16px;padding:30px 36px;margin-bottom:22px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px}
+.hero-glow{position:absolute;top:-50px;right:-50px;width:260px;height:260px;background:radial-gradient(circle,rgba(255,107,0,.15),transparent 70%);pointer-events:none}
+.hero-icon{flex-shrink:0;width:80px;height:80px;background:rgba(255,107,0,.15);border:2px solid rgba(255,107,0,.3);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:38px}
+.hero-content h2{font-size:24px;font-weight:800;background:linear-gradient(90deg,#fff,#FF8C33);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.hero-content p{color:var(--text-muted);font-size:14px;line-height:1.55;max-width:580px}
+.hero-kpi{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
+.kpi{background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.2);border-radius:10px;padding:9px 16px;text-align:center}
+.kpi .num{font-size:20px;font-weight:800;color:var(--pw-orange);display:block}
+.kpi .lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.mode-selector{display:flex;gap:0;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02);margin-bottom:18px}
+.mode-card{flex:1;padding:18px 12px;cursor:pointer;text-align:center;border:none;background:none;color:var(--text-muted);transition:all .22s;border-right:1px solid rgba(255,255,255,.07);position:relative}
+.mode-card:last-child{border-right:none}
+.mode-card:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.mode-card.active{background:rgba(255,107,0,.1);color:var(--pw-orange)}
+.mode-card.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--pw-orange)}
+.mc-icon{font-size:26px;display:block;margin-bottom:7px}
+.mc-title{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
+.mc-desc{font-size:11px;opacity:.6;line-height:1.4}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);padding:9px 12px;font-size:13px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--pw-orange)}
+.form-group select option{background:#1A1A2E}
+.sheets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:12px}
+.sheet-slot{background:rgba(255,255,255,.03);border:2px dashed rgba(255,255,255,.1);border-radius:10px;padding:18px;transition:all .2s}
+.sheet-slot.has-file{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.04)}
+.sheet-slot.dragging{border-color:var(--pw-orange);background:rgba(255,107,0,.05)}
+.slot-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.sbadge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+.bp{background:rgba(99,179,237,.2);color:#63b3ed}.bc{background:rgba(246,173,85,.2);color:#f6ad55}
+.bb{background:rgba(104,211,145,.2);color:#68d391}.bm{background:rgba(198,107,242,.2);color:#c66bf2}
+.bz{background:rgba(249,115,22,.2);color:#f97316}.bbio{background:rgba(20,184,166,.2);color:#2dd4bf}
+.drop-area{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-height:72px;justify-content:center}
+.drop-icon{font-size:26px;opacity:.35}
+.drop-text{font-size:12px;color:var(--text-muted);text-align:center}
+.drop-text strong{color:var(--pw-orange-light)}
+.file-chosen{display:flex;align-items:center;gap:8px}
+.fi-info{flex:1;min-width:0}
+.fi-name{font-size:12px;font-weight:600;color:var(--easy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-rows{font-size:10px;color:var(--text-muted)}
+.rm-btn{background:rgba(239,68,68,.2);border:none;color:var(--hard);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hidden-input{display:none}
+.drive-note{font-size:12px;color:var(--text-muted);background:rgba(255,255,255,.04);border-radius:8px;padding:11px 14px;border-left:3px solid var(--pw-orange);line-height:1.6;margin-bottom:14px}
+.drive-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.drive-row .form-group{flex:1;min-width:240px}
+.btn-fetch{background:rgba(99,179,237,.15);color:#63b3ed;border:1px solid rgba(99,179,237,.3);padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;height:40px;transition:all .2s;align-self:flex-end}
+.btn-fetch:hover{background:rgba(99,179,237,.25)}.btn-fetch:disabled{opacity:.45;cursor:not-allowed}
+.drive-status-list{display:flex;flex-direction:column;gap:8px}
+.dfile-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px 14px}
+.dfile-row.ok{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
+.dfile-row.err{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+.dfile-info{flex:1;min-width:0}
+.dfile-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dfile-sub{font-size:11px;color:var(--text-muted)}
+.dbadge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;flex-shrink:0}
+.dbadge-ok{background:rgba(34,197,94,.15);color:#4ade80}
+.dbadge-err{background:rgba(239,68,68,.15);color:#f87171}
+.dbadge-wait{background:rgba(255,107,0,.15);color:#fb923c}
+.theme-row{display:flex;gap:8px;flex-wrap:wrap}
+.theme-btn{padding:9px 18px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.theme-btn.active{border-color:var(--pw-orange)}
+.t-dark{background:#1a1a2e;color:#e2e8f0}.t-light{background:#f8f9fa;color:#1a1a2e}
+.t-navy{background:#0a192f;color:#64ffda}.t-forest{background:#1a2e1a;color:#a3e635}
+.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.ds{background:var(--pw-card);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:16px;text-align:center}
+.ds .num{font-size:28px;font-weight:800;display:block;margin-bottom:3px}
+.ds .lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.action-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-primary{background:linear-gradient(135deg,#FF6B00,#FF8C33);color:#fff;border:none;padding:12px 26px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 18px rgba(255,107,0,.35);display:flex;align-items:center;gap:7px}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,107,0,.45)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-sec{background:rgba(255,255,255,.07);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-sec:hover{background:rgba(255,255,255,.11)}
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:999}
+.loading-box{background:#1A1A2E;border:1px solid var(--pw-border);border-radius:16px;padding:36px 48px;text-align:center;max-width:340px}
+.spin-big{width:46px;height:46px;border:3px solid rgba(255,107,0,.2);border-top-color:var(--pw-orange);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-box h3{font-size:16px;font-weight:700;margin-bottom:7px}
+.loading-box p{font-size:12px;color:var(--text-muted);line-height:1.5}
+.toast{position:fixed;bottom:28px;right:28px;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;transform:translateY(70px);opacity:0;transition:all .3s;z-index:9999;box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.toast.show{transform:translateY(0);opacity:1}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,107,0,.3);border-radius:3px}
+/* Biology slot special style */
+.bio-slot-note{font-size:10px;color:var(--text-muted);background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);border-radius:6px;padding:5px 9px;margin-top:6px;text-align:center;line-height:1.4}
+/* ============================================================
+POSTER STYLES
+============================================================ */
+.poster-root{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a2744;width:100%;max-width:1100px;margin:0 auto;border-radius:10px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.18)}
+.pr-header{background:#1a2744;color:#fff;padding:22px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pr-header-left{display:flex;align-items:center;gap:14px}
+.pr-logo{background:var(--pw-orange);color:#fff;font-weight:900;font-size:15px;padding:7px 12px;border-radius:7px;letter-spacing:1px}
+.pr-title{font-size:22px;font-weight:800;color:#fff;line-height:1.2}
+.pr-subtitle{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+.pr-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pr-meta-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 13px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8)}
+.pr-body{background:linear-gradient(135deg,#f0f4ff 0%,#fdf4ff 30%,#fff7ed 60%,#f0fdf4 100%);padding:24px 28px}
+.pr-subjects{display:flex;flex-direction:column;gap:16px}
+.pr-subjects.s1,.pr-subjects.s2,.pr-subjects.s3,.pr-subjects.s4,.pr-subjects.smulti{display:flex;flex-direction:column;gap:16px}
+.subj-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(26,39,68,.09)}
+.subj-card-head{padding:10px 18px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.subj-card-title{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.subj-card-count{font-size:11px;font-weight:600;opacity:.8;background:rgba(255,255,255,.18);border-radius:12px;padding:3px 10px}
+.subj-card-body{padding:16px 18px}
+.role-row{display:grid;gap:0;margin-bottom:16px;border-bottom:1px solid #e8ecf4;padding-bottom:14px}
+.role-row.r3{grid-template-columns:repeat(3,1fr)}
+.role-item{text-align:center;padding:8px 4px;border-right:1px solid #e8ecf4}
+.role-item:last-child{border-right:none}
+.role-icon{font-size:28px;display:block;margin-bottom:5px}
+.role-pct{font-size:20px;font-weight:900;display:block;line-height:1}
+.role-label{font-size:10px;font-weight:700;color:#6b7a9a;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.role-count{font-size:11px;font-weight:600;color:#9ba8c0;margin-top:1px}
+.split-section{display:flex;align-items:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e8ecf4}
+.donut-wrap{flex-shrink:0}
+.donut-legend{flex:1}
+.donut-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:#374060}
+.dl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.dl-label{flex:1;font-weight:600}
+.dl-val{font-weight:800;color:#1a2744}
+.dl-bar{flex:1;height:7px;border-radius:4px;background:#e8ecf4;overflow:hidden;margin:0 6px}
+.dl-bar-fill{height:100%;border-radius:4px}
+.chapter-section-title{font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.chapter-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ch-name{font-size:11px;font-weight:600;color:#374060;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-bar-wrap{width:90px;height:10px;background:#e8ecf4;border-radius:5px;overflow:hidden;flex-shrink:0}
+.ch-bar-fill{height:100%;border-radius:5px}
+.ch-count{font-size:11px;font-weight:800;color:#1a2744;min-width:22px;text-align:right;flex-shrink:0}
+.qmap-title{font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px}
+.q-grid-poster{display:flex;flex-wrap:wrap;gap:3px}
+.qc{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.qc-easy{background:#dcfce7;color:#166534}.qc-medium{background:#fef9c3;color:#854d0e}.qc-hard{background:#fee2e2;color:#991b1b}
+.qnum-section{margin-top:10px;padding-top:10px;border-top:1px solid #e8ecf4}
+.qnum-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qnum-col-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.qnum-chips{display:flex;flex-wrap:wrap;gap:3px}
+.qchip{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px}
+.qchip-easy{background:#dcfce7;color:#166534}
+.qchip-medium{background:#fef9c3;color:#854d0e}
+.qchip-hard{background:#fee2e2;color:#991b1b}
+.qnone{font-size:10px;color:#c0c8d8;font-style:italic}
+.pr-footer{background:#1a2744;color:rgba(255,255,255,.45);font-size:11px;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.pr-footer-brand{color:rgba(255,107,0,.7);font-weight:700}
+.pr-legend{display:flex;gap:12px}
+.pr-leg-item{display:flex;align-items:center;gap:5px;font-size:10px}
+.pr-leg-dot{width:8px;height:8px;border-radius:50%}
+.poster-empty{text-align:center;padding:60px 32px;color:var(--text-muted)}
+.poster-empty-icon{font-size:52px;margin-bottom:14px;opacity:.3}
+@media print {
+body { background: #fff !important; }
+.app-header, #view-dashboard, .view:not(.active), .toast { display: none !important; }
+.container { padding: 0 !important; max-width: 100% !important; }
+#view-poster { display: block !important; }
+.poster-root { box-shadow: none !important; max-width: 100% !important; border-radius: 0 !important; }
+.action-row { display: none !important; }
+h2 { display: none !important; }
+@page { size: landscape; margin: 8mm; }
+}
+@media(max-width:700px){
+.app-header-top{padding:11px 14px}.nav-tabs{padding:0 14px}.container{padding:14px}
+.mode-selector{flex-direction:column}
+}
+.trend-arrow { display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:12px;letter-spacing:.3px }
+.trend-up { background:#fee2e2;color:#b91c1c }
+.trend-down { background:#dcfce7;color:#15803d }
+.trend-neutral { background:#f1f5f9;color:#64748b }
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="lo">
+<div class="loading-box">
+<div class="spin-big"></div>
+<h3 id="lo-title">Drive se files load ho rahe hain...</h3>
+<p id="lo-msg">Thoda ruko, Excel files parse kar rahe hain</p>
+</div>
+</div>
+<header class="app-header">
+<div class="app-header-top">
+<div class="brand">
+<div class="pw-logo">PW</div>
+<div class="brand-text">
+<h1>PosterGen Pro</h1>
+<p>NEET / JEE Paper Analysis Suite</p>
+</div>
+</div>
+<div class="header-badge">⚡ AI-Powered Analysis Tool</div>
+</div>
+<div class="nav-tabs">
+<button class="nav-tab active" onclick="switchTab('dashboard')" id="tab-dashboard">📊 Dashboard</button>
+<button class="nav-tab" onclick="switchTab('poster')" id="tab-poster">🖼️ Poster Generator</button>
+</div>
+</header>
+<div id="view-dashboard" class="view active">
+<div class="container">
+<div class="dash-hero">
+<div class="hero-glow"></div>
+<div class="hero-icon">📋</div>
+<div class="hero-content">
+<h2>NEET / JEE Paper Analysis Dashboard</h2>
+<p>Teen modes mein data load karo — manual upload, subject-wise, ya Google Drive link se. Poster Market Research Report style mein milega.</p>
+<div class="hero-kpi">
+<div class="kpi"><span class="num" id="kpi-sheets">0</span><span class="lbl">Sheets</span></div>
+<div class="kpi"><span class="num" id="kpi-qs">0</span><span class="lbl">Questions</span></div>
+<div class="kpi"><span class="num" id="kpi-dom">—</span><span class="lbl">Dominant</span></div>
+</div>
+</div>
+</div>
+<div class="section-card" style="padding:18px">
+<div class="section-title">🎯 Poster Mode Chuno</div>
+<div class="mode-selector">
+<button class="mode-card active" onclick="setMode('merged')" id="mode-merged">
+<span class="mc-icon">🔀</span>
+<span class="mc-title">Merged Poster</span>
+<span class="mc-desc">Sabhi subjects ek hi report card mein — Physics, Chem, Botany, Zoo, Maths</span>
+</button>
+<button class="mode-card" onclick="setMode('subject')" id="mode-subject">
+<span class="mc-icon">📄</span>
+<span class="mc-title">Subject-wise</span>
+<span class="mc-desc">Har subject ka full-page alag poster separately</span>
+</button>
+<button class="mode-card" onclick="setMode('drive')" id="mode-drive">
+<span class="mc-icon">☁️</span>
+<span class="mc-title">Drive Link se</span>
+<span class="mc-desc">Google Drive folder link do — auto detect aur load karega</span>
+</button>
+</div>
+</div>
+<div id="panel-manual">
+<div class="section-card">
+<div class="section-title">📁 Subject Sheets Upload Karo</div>
+<div class="sheets-grid" id="sheets-grid"></div>
+</div>
+</div>
+<div id="panel-drive" style="display:none">
+<div class="section-card">
+<div class="section-title">☁️ Google Drive se Load Karo</div>
+<div class="drive-note">
+<strong>📌 File naming rule:</strong> Files ka naam subject contain kare —
+<strong>Physics.xlsx</strong>, <strong>Chemistry.xlsx</strong>, <strong>Botany.xlsx</strong>, <strong>Zoology.xlsx</strong>, <strong>Maths.xlsx</strong>
+(ya Phy, Chem, Bot, Zoo, Math bhi chalega)
+</div>
+<div class="drive-row">
+<div class="form-group">
+<label>Google Drive Folder Link</label>
+<input type="text" id="drive-link-input" placeholder="https://drive.google.com/drive/folders/...">
+</div>
+<button class="btn-fetch" onclick="fetchFromDrive()" id="btn-fetch">☁️ Fetch Files</button>
+</div>
+<div id="drive-status-list" class="drive-status-list"></div>
+</div>
+</div>
+<div class="section-card">
+<div class="section-title">📝 Exam Details</div>
+<div class="form-row" style="margin-bottom:14px">
+<div class="form-group"><label>Exam Name</label><input type="text" id="exam-name" placeholder="e.g. NEET 2025 Mock Test 1"></div>
+<div class="form-group"><label>Date / Session</label><input type="text" id="exam-date" placeholder="e.g. 10 June 2025, Morning"></div>
+<div class="form-group"><label>Batch / Institute</label><input type="text" id="exam-batch" placeholder="e.g. Lakshya Batch — PW Patna"></div>
+</div>
+<!-- Poster Header Customization -->
+<div style="border-top:1px solid rgba(255,255,255,.07);padding-top:14px">
+<div style="font-size:11px;font-weight:700;color:var(--pw-orange);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:7px">
+🎨 Poster Header Customize Karo
+<span style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:none;letter-spacing:0">(optional — khali chhodoge to default use hoga)</span>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>📌 Poster Title (Header ka bada title)</label>
+<input type="text" id="poster-title" placeholder="e.g. GMC Cutoff Analysis 2025 · NEET" oninput="livePreviewHeader()">
+<small style="color:var(--text-muted);font-size:10px;margin-top:3px">Khali = Exam Name use hoga</small>
+</div>
+<div class="form-group">
+<label>📝 Poster Subtitle (Header ke neeche chhota text)</label>
+<input type="text" id="poster-subtitle" placeholder="e.g. Question-wise Difficulty Tagging Report" oninput="livePreviewHeader()">
+<small style="color:var(--text-muted);font-size:10px;margin-top:3px">Khali = auto subtitle aayega</small>
+</div>
+</div>
+<!-- Live mini-preview of header -->
+<div id="header-live-preview" style="margin-top:12px;background:#111;border-radius:8px;padding:12px 18px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,107,0,.2)">
+<div style="background:#FF6B00;color:#fff;font-weight:900;font-size:13px;padding:5px 10px;border-radius:6px;letter-spacing:1px;flex-shrink:0">PW</div>
+<div>
+<div id="preview-title" style="font-size:15px;font-weight:800;color:#fff">NEET/JEE Paper Analysis</div>
+<div id="preview-subtitle" style="font-size:11px;color:rgba(255,255,255,.45);margin-top:2px">Question-wise Difficulty Tagging Report</div>
+</div>
+<div style="margin-left:auto;font-size:10px;color:rgba(255,107,0,.6);font-weight:600">← Live Preview</div>
+</div>
+</div>
+</div>
+<div class="section-card">
+<div class="section-title">🚀 Generate Poster</div>
+<div id="dash-stats-row" style="display:none" class="dash-stats">
+<div class="ds"><span class="num" style="color:var(--easy)" id="dash-easy">0</span><span class="lbl">Easy</span></div>
+<div class="ds"><span class="num" style="color:var(--medium)" id="dash-med">0</span><span class="lbl">Medium</span></div>
+<div class="ds"><span class="num" style="color:var(--hard)" id="dash-hard">0</span><span class="lbl">Hard</span></div>
+<div class="ds"><span class="num" style="color:var(--pw-orange)" id="dash-ch">0</span><span class="lbl">Chapters</span></div>
+</div>
+<div class="action-row">
+<button class="btn-primary" onclick="generatePoster()">🎯 Generate Poster</button>
+<button class="btn-sec" onclick="exportPNG()">⬇️ Export PNG</button>
+<button class="btn-sec" onclick="printPoster()">🖨️ Print</button>
+<button class="btn-sec" onclick="exportPDF()">📄 Save PDF</button>
+<button class="btn-sec" onclick="switchTab('poster')">🖼️ View Poster</button>
+</div>
+</div>
+</div>
+</div>
+<div id="view-poster" class="view">
+<div class="container">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+<h2 style="font-size:17px;font-weight:700">🖼️ Poster Preview</h2>
+<div class="action-row">
+<button class="btn-primary" onclick="generatePoster()">🔄 Regenerate</button>
+<button class="btn-sec" onclick="exportPNG()">⬇️ Export PNG</button>
+<button class="btn-sec" onclick="printPoster()">🖨️ Print</button>
+<button class="btn-sec" onclick="exportPDF()">📄 Save PDF</button>
+<button class="btn-sec" onclick="switchTab('dashboard')">← Back</button>
+</div>
+</div>
+<div id="poster-container">
+<div class="poster-empty">
+<div class="poster-empty-icon">🖼️</div>
+<p style="font-size:15px;margin-bottom:6px">Abhi koi poster nahi hai</p>
+<p style="font-size:12px">Dashboard mein sheets upload karo aur Generate dabao</p>
+</div>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SUBJECTS = [
+{id:'physics', name:'Physics', emoji:'⚛️', bc:'bp', color:'#3b82f6', headBg:'#1e3a8a', icon:'🔬', keywords:['physics','phy']},
+{id:'chemistry', name:'Chemistry', emoji:'🧪', bc:'bc', color:'#f59e0b', headBg:'#78350f', icon:'⚗️', keywords:['chemistry','chem','che']},
+{id:'botany', name:'Botany', emoji:'🌱', bc:'bb', color:'#22c55e', headBg:'#14532d', icon:'🪴', keywords:['botany','bot','plant']},
+{id:'zoology', name:'Zoology', emoji:'🐾', bc:'bz', color:'#f97316', headBg:'#7c2d12', icon:'🦁', keywords:['zoology','zoo','zool','animal']},
+{id:'maths', name:'Maths', emoji:'📐', bc:'bm', color:'#a855f7', headBg:'#4c1d95', icon:'📊', keywords:['maths','math','mathematics']},
+{id:'biology', name:'Biology', emoji:'🧬', bc:'bbio', color:'#14b8a6', headBg:'#134e4a', icon:'🔭', keywords:['biology','bio']},
+];
+
+let state = {mode:'merged', theme:'bw', sheets:{physics:null,chemistry:null,botany:null,zoology:null,maths:null,biology:null}};
+
+function init(){buildSlots()}
+
+function switchTab(t){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.querySelectorAll('.nav-tab').forEach(n=>n.classList.remove('active'));
+document.getElementById('view-'+t).classList.add('active');
+document.getElementById('tab-'+t).classList.add('active');
+}
+
+function setMode(m){
+state.mode=m;
+['merged','subject','drive'].forEach(id=>document.getElementById('mode-'+id).classList.toggle('active',id===m));
+document.getElementById('panel-manual').style.display=(m==='drive')?'none':'block';
+document.getElementById('panel-drive').style.display=(m==='drive')?'block':'none';
+}
+
+function setTheme(t){ state.theme='bw'; }
+
+function buildSlots(){
+document.getElementById('sheets-grid').innerHTML = SUBJECTS.map(s=>{
+const isBio = s.id === 'biology';
+return `
+<div class="sheet-slot" id="slot-${s.id}">
+<div class="slot-label">${s.emoji} ${s.name}<span class="sbadge ${s.bc}">${s.name}</span></div>
+<div class="drop-area" onclick="triggerUp('${s.id}')"
+ondragover="dOver(event,'${s.id}')" ondragleave="dLeave('${s.id}')" ondrop="dDrop(event,'${s.id}')"
+id="drop-${s.id}">
+<div class="drop-icon">📂</div>
+<div class="drop-text"><strong>Click to upload</strong><br>ya drag &amp; drop karo<br><small>.xlsx .xls .csv</small></div>
+</div>
+${isBio ? `<div class="bio-slot-note">🌱🐾 Botany + Zoology dono ek saath<br>Upload Biology combined sheet yahan</div>` : ''}
+<input type="file" class="hidden-input" id="file-${s.id}" accept=".xlsx,.xls,.csv" onchange="onFile(event,'${s.id}')">
+</div>`;
+}).join('');
+}
+
+function triggerUp(s){document.getElementById('file-'+s).click()}
+function dOver(e,s){e.preventDefault();document.getElementById('slot-'+s).classList.add('dragging')}
+function dLeave(s){document.getElementById('slot-'+s).classList.remove('dragging')}
+function dDrop(e,s){e.preventDefault();dLeave(s);const f=e.dataTransfer.files[0];if(f)procFile(f,s)}
+function onFile(e,s){const f=e.target.files[0];if(f)procFile(f,s)}
+
+function procFile(file,subj){
+const r=new FileReader();
+r.onload=e=>{
+try{
+const wb=XLSX.read(e.target.result,{type:'binary'});
+const ws=wb.Sheets[wb.SheetNames[0]];
+const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+state.sheets[subj]={file:file.name,rows,subject:subj};
+setSlotFilled(subj,file.name,rows.length);
+refreshStats();
+toast('✅ '+subj+' loaded ('+rows.length+' rows)');
+}catch(e){toast('❌ File error!',true)}
+};
+r.readAsBinaryString(file);
+}
+
+function setSlotFilled(subj,fname,cnt){
+document.getElementById('slot-'+subj).classList.add('has-file');
+const isBio = subj === 'biology';
+document.getElementById('drop-'+subj).innerHTML=`
+<div class="file-chosen">
+<span style="font-size:24px">📊</span>
+<div class="fi-info"><div class="fi-name">${fname}</div><div class="fi-rows">${cnt} questions</div></div>
+<button class="rm-btn" onclick="rmSheet('${subj}',event)">✕</button>
+</div>
+${isBio ? `<div class="bio-slot-note" style="margin-top:8px">🌱🐾 Biology (Botany + Zoology combined)</div>` : ''}`;
+}
+
+function rmSheet(subj,e){
+e.stopPropagation();state.sheets[subj]=null;
+document.getElementById('slot-'+subj).classList.remove('has-file');
+buildSlots();refreshStats();
+}
+
+function analyse(rows){
+let easy=[],medium=[],hard=[],chMap={};
+rows.forEach((r,i)=>{
+const qno=r.Q_No||r.q_no||r['Q No']||r['Question No']||r.QNo||r['Sr No']||r['S.No']||(i+1);
+const chapter=String(r.Chapter||r.chapter||r.Topic||r.Unit||'Unknown').trim();
+const raw=String(r.Difficulty||r.difficulty||r.Level||r.Type||'').trim().toLowerCase();
+chMap[chapter]=(chMap[chapter]||0)+1;
+if(raw==='easy'||raw==='e'||raw==='1') easy.push(qno);
+else if(raw==='hard'||raw==='h'||raw==='3') hard.push(qno);
+else medium.push(qno);
+});
+return{easy,medium,hard,chMap,total:rows.length};
+}
+
+function refreshStats(){
+let tQ=0,tE=0,tM=0,tH=0,n=0,ch=new Set();
+Object.values(state.sheets).forEach(s=>{
+if(!s)return;n++;
+const a=analyse(s.rows);
+tQ+=a.total;tE+=a.easy.length;tM+=a.medium.length;tH+=a.hard.length;
+Object.keys(a.chMap).forEach(c=>ch.add(c));
+});
+document.getElementById('kpi-sheets').textContent=n;
+document.getElementById('kpi-qs').textContent=tQ;
+document.getElementById('kpi-dom').textContent=n?(tE>=tM&&tE>=tH?'Easy':tM>=tH?'Medium':'Hard'):'—';
+const row=document.getElementById('dash-stats-row');
+if(n>0){
+row.style.display='grid';
+document.getElementById('dash-easy').textContent=tE;
+document.getElementById('dash-med').textContent=tM;
+document.getElementById('dash-hard').textContent=tH;
+document.getElementById('dash-ch').textContent=ch.size;
+}else row.style.display='none';
+}
+
+async function fetchFromDrive(){
+const raw=document.getElementById('drive-link-input').value.trim();
+if(!raw){toast('⚠️ Drive link daalo!',true);return}
+let fid=null;
+const m1=raw.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+const m2=raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+if(m1)fid=m1[1];else if(m2)fid=m2[1];
+else if(/^[a-zA-Z0-9_-]{20,}$/.test(raw))fid=raw;
+if(!fid){toast('❌ Valid folder link nahi hai!',true);return}
+showLoad('☁️ Drive folder scan ho raha hai...','Subject Excel files dhundh rahe hain');
+document.getElementById('btn-fetch').disabled=true;
+document.getElementById('drive-status-list').innerHTML='';
+Object.keys(state.sheets).forEach(k=>state.sheets[k]=null);
+try{
+const res=await fetch('https://api.anthropic.com/v1/messages',{
+method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+model:'claude-sonnet-4-20250514',max_tokens:4000,
+system:`You are a file assistant. Use Google Drive MCP to list files in folder ID given by user.
+Find Excel/CSV files with names containing: physics,phy,chemistry,chem,botany,bot,zoology,zoo,zool,maths,math,biology,bio (case-insensitive).
+Respond ONLY with valid JSON (no markdown):
+{"files":[{"fileId":"...","name":"...","subject":"physics|chemistry|botany|zoology|maths|biology"}],"error":null}
+Map: physics/phy→physics, chem→chemistry, botany/bot/plant→botany, zoo/zool/zoology/animal→zoology, math/maths→maths, biology/bio→biology`,
+messages:[{role:'user',content:'Find subject Excel files in Drive folder ID: '+fid}],
+mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'gdrive'}]
+})
+});
+const data=await res.json();
+let txt='';
+if(data.content) data.content.forEach(item=>{if(item.type==='text')txt+=item.text});
+let parsed=null;
+try{const jm=txt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);if(jm)parsed=JSON.parse(jm[0])}catch(e){}
+if(!parsed||!parsed.files||!parsed.files.length){
+hideLoad();renderDriveErr((parsed&&parsed.error)||'Koi subject file nahi mili. File names mein subject naam hona chahiye.');
+document.getElementById('btn-fetch').disabled=false;return;
+}
+const sl=document.getElementById('drive-status-list');
+for(const fi of parsed.files){
+setLoad('📥 "'+fi.name+'" download ho rahi hai...','Parse kar rahe hain...');
+const row=makeDriveRow(fi);sl.appendChild(row);
+try{
+const dr=await fetch('https://api.anthropic.com/v1/messages',{
+method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+model:'claude-sonnet-4-20250514',max_tokens:8000,
+system:`Download Drive file and return its rows as JSON.
+Respond ONLY with valid JSON:
+{"rows":[{"Q_No":1,"Chapter":"ChapterName","Difficulty":"Easy|Medium|Hard"}],"error":null}
+Map columns: Q_No/QNo/Question No→Q_No, Chapter/Topic/Unit→Chapter, Difficulty/Level/Type→Difficulty
+Map difficulty values: easy/e/1→Easy, medium/m/2→Medium, hard/h/3→Hard`,
+messages:[{role:'user',content:'Download and parse file ID: '+fi.fileId+' name: '+fi.name}],
+mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'gdrive'}]
+})
+});
+const dd=await dr.json();
+let dt='';if(dd.content)dd.content.forEach(i=>{if(i.type==='text')dt+=i.text});
+let dp=null;
+try{const jm=dt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);if(jm)dp=JSON.parse(jm[0])}catch(e){}
+if(dp&&dp.rows&&dp.rows.length){
+state.sheets[fi.subject]={file:fi.name,rows:dp.rows,subject:fi.subject};
+row.className='dfile-row ok';
+row.querySelector('.dbadge').textContent='✅ '+dp.rows.length+' Qs';
+row.querySelector('.dbadge').className='dbadge dbadge-ok';
+row.querySelector('.dfile-sub').textContent=dp.rows.length+' questions loaded';
+}else{
+row.className='dfile-row err';
+row.querySelector('.dbadge').textContent='❌ Parse Error';row.querySelector('.dbadge').className='dbadge dbadge-err';
+row.querySelector('.dfile-sub').textContent='Parse nahi hui — columns check karo';
+}
+}catch(e){row.className='dfile-row err';row.querySelector('.dbadge').textContent='❌ Error';row.querySelector('.dbadge').className='dbadge dbadge-err';}
+}
+hideLoad();refreshStats();
+document.getElementById('btn-fetch').disabled=false;
+const ln=Object.values(state.sheets).filter(Boolean).length;
+toast(ln>0?'✅ '+ln+' subjects Drive se load ho gaye!':'⚠️ Koi file load nahi hui.',!ln);
+}catch(e){
+hideLoad();document.getElementById('btn-fetch').disabled=false;
+renderDriveErr('Connection error: '+e.message);toast('❌ Drive connect nahi ho saka!',true);
+}
+}
+
+function makeDriveRow(fi){
+const s=SUBJECTS.find(x=>x.id===fi.subject)||{emoji:'📄'};
+const d=document.createElement('div');
+d.className='dfile-row';
+d.innerHTML=`<span style="font-size:20px">${s.emoji}</span>
+<div class="dfile-info"><div class="dfile-name">${fi.name}</div><div class="dfile-sub">Downloading...</div></div>
+<span class="dbadge dbadge-wait">⏳ Loading</span>`;
+return d;
+}
+
+function renderDriveErr(msg){
+document.getElementById('drive-status-list').innerHTML=`
+<div class="dfile-row err"><span style="font-size:20px">⚠️</span>
+<div class="dfile-info"><div class="dfile-name">Error</div><div class="dfile-sub">${msg}</div></div></div>`;
+}
+
+function makeDonut(easy,medium,hard,total,color){
+if(total===0) return `<svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="#e8ecf4" stroke-width="12"/></svg>`;
+const r=28,cx=40,cy=40,circ=2*Math.PI*r;
+const eA=easy/total,mA=medium/total,hA=hard/total;
+const eD=eA*circ,mD=mA*circ,hD=hA*circ;
+let offset=0;
+const segs=[];
+if(easy>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="${eD} ${circ-eD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`);offset+=eA;}
+if(medium>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="${mD} ${circ-mD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`);offset+=mA;}
+if(hard>0){segs.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="${hD} ${circ-hD}" stroke-dashoffset="${-offset*circ}" transform="rotate(-90 40 40)"/>`)}
+return `<svg width="80" height="80" viewBox="0 0 80 80">${segs.join('')}<text x="40" y="44" text-anchor="middle" font-size="12" font-weight="800" fill="#1a2744">${total}</text></svg>`;
+}
+
+function trendArrow(pct, type) {
+let arrow, cls;
+if (type === 'easy') {
+if (pct >= 50) { arrow = '▲'; cls = 'trend-down'; }
+else if (pct >= 30) { arrow = '▶'; cls = 'trend-neutral'; }
+else { arrow = '▼'; cls = 'trend-up'; }
+} else if (type === 'hard') {
+if (pct >= 40) { arrow = '▲'; cls = 'trend-up'; }
+else if (pct >= 20) { arrow = '▶'; cls = 'trend-neutral'; }
+else { arrow = '▼'; cls = 'trend-down'; }
+} else {
+if (pct >= 40) { arrow = '▲'; cls = 'trend-neutral'; }
+else { arrow = '▼'; cls = 'trend-neutral'; }
+}
+return `<span class="trend-arrow ${cls}">${arrow} ${pct}%</span>`;
+}
+
+function buildSubjCard(subj, analysis, color, headBg, displayName, displayIcon){
+const s = SUBJECTS.find(x=>x.id===subj);
+const name = displayName || s.name;
+const icon = displayIcon || s.icon;
+const {easy, medium, hard, total} = analysis;
+const eP = total ? Math.round(easy.length/total*100) : 0;
+const mP = total ? Math.round(medium.length/total*100) : 0;
+const hP = total ? Math.round(hard.length/total*100) : 0;
+const sorted = [...easy.map(q=>({q,d:'easy'})),...medium.map(q=>({q,d:'medium'})),...hard.map(q=>({q,d:'hard'}))]
+.sort((a,b)=>(parseInt(a.q)||0)-(parseInt(b.q)||0)).slice(0,45);
+const qMapHtml = sorted.map(({q,d})=>`<div class="qc qc-${d}">${q}</div>`).join('');
+const donutSvg = makeDonut(easy.length, medium.length, hard.length, total, color);
+const eChips = easy.map(q=>`<span class="qchip qchip-easy">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+const mChips = medium.map(q=>`<span class="qchip qchip-medium">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+const hChips = hard.map(q=>`<span class="qchip qchip-hard">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+return `
+<div class="subj-card" style="border-top:4px solid ${color}">
+<div class="subj-card-head" style="background:${headBg}">
+<div class="subj-card-title">${icon} ${name}</div>
+<div class="subj-card-count">${total} Questions</div>
+</div>
+<div style="display:flex;gap:0">
+<div style="width:215px;flex-shrink:0;padding:14px 16px;border-right:2px solid #e8ecf4;display:flex;flex-direction:column;gap:10px;background:${headBg}10">
+<div style="display:flex;justify-content:space-around;padding-bottom:10px;border-bottom:1px solid #e8ecf4">
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#22c55e;line-height:1">${easy.length}</div>
+<div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Easy</div>
+${trendArrow(eP,'easy')}
+</div>
+<div style="width:1px;background:#e8ecf4"></div>
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#f59e0b;line-height:1">${medium.length}</div>
+<div style="font-size:9px;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Med</div>
+${trendArrow(mP,'medium')}
+</div>
+<div style="width:1px;background:#e8ecf4"></div>
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#ef4444;line-height:1">${hard.length}</div>
+<div style="font-size:9px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Hard</div>
+${trendArrow(hP,'hard')}
+</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+${donutSvg}
+<div style="width:100%">
+<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Easy</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${eP}%;height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${easy.length}</span>
+</div>
+<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Med</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${mP}%;height:100%;background:linear-gradient(90deg,#fcd34d,#f59e0b);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${medium.length}</span>
+</div>
+<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#ef4444;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Hard</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${hP}%;height:100%;background:linear-gradient(90deg,#f87171,#ef4444);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${hard.length}</span>
+</div>
+</div>
+</div>
+</div>
+<div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+<div>
+<div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗺️ Question Map</div>
+<div class="q-grid-poster">${qMapHtml}</div>
+</div>
+<div style="border-top:1px solid #e8ecf4;padding-top:10px">
+<div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">📋 Question Numbers</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<div style="background:#f0fdf4;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#166534">🟢 Easy (${easy.length})</div>
+<div class="qnum-chips">${eChips}</div>
+</div>
+<div style="background:#fefce8;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#854d0e">🟡 Medium (${medium.length})</div>
+<div class="qnum-chips">${mChips}</div>
+</div>
+<div style="background:#fff1f2;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#991b1b">🔴 Hard (${hard.length})</div>
+<div class="qnum-chips">${hChips}</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>`;
+}
+
+/* Biology combined card — Botany + Zoology split internally */
+function buildBiologyCard(botData, zooData){
+const bioColor = '#14b8a6';
+const bioBg = '#134e4a';
+const botA = botData ? analyse(botData.rows) : null;
+const zooA = zooData ? analyse(zooData.rows) : null;
+
+// Merged total
+const allRows = [
+...(botData ? botData.rows : []),
+...(zooData ? zooData.rows : [])
+];
+if(!allRows.length) return '';
+const merged = analyse(allRows);
+const {easy, medium, hard, total} = merged;
+const eP = total ? Math.round(easy.length/total*100) : 0;
+const mP = total ? Math.round(medium.length/total*100) : 0;
+const hP = total ? Math.round(hard.length/total*100) : 0;
+const donutSvg = makeDonut(easy.length, medium.length, hard.length, total, bioColor);
+
+const eChips = easy.map(q=>`<span class="qchip qchip-easy">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+const mChips = medium.map(q=>`<span class="qchip qchip-medium">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+const hChips = hard.map(q=>`<span class="qchip qchip-hard">Q${q}</span>`).join('') || '<span class="qnone">None</span>';
+
+const sorted = [...easy.map(q=>({q,d:'easy'})),...medium.map(q=>({q,d:'medium'})),...hard.map(q=>({q,d:'hard'}))]
+.sort((a,b)=>(parseInt(a.q)||0)-(parseInt(b.q)||0)).slice(0,45);
+const qMapHtml = sorted.map(({q,d})=>`<div class="qc qc-${d}">${q}</div>`).join('');
+
+// Sub-section for Botany
+function subSection(label, emoji, color, a){
+if(!a) return `<div style="opacity:.4;font-size:11px;font-style:italic">${label} — not loaded</div>`;
+const eP2=a.total?Math.round(a.easy.length/a.total*100):0;
+const mP2=a.total?Math.round(a.medium.length/a.total*100):0;
+const hP2=a.total?Math.round(a.hard.length/a.total*100):0;
+return `<div style="background:${color}12;border:1px solid ${color}30;border-radius:8px;padding:8px 10px">
+<div style="font-size:10px;font-weight:800;color:${color};margin-bottom:6px">${emoji} ${label} — ${a.total} Qs</div>
+<div style="display:flex;gap:10px;font-size:11px;font-weight:700">
+<span style="color:#22c55e">E: ${a.easy.length} <small style="font-weight:500;color:#9ba8c0">(${eP2}%)</small></span>
+<span style="color:#f59e0b">M: ${a.medium.length} <small style="font-weight:500;color:#9ba8c0">(${mP2}%)</small></span>
+<span style="color:#ef4444">H: ${a.hard.length} <small style="font-weight:500;color:#9ba8c0">(${hP2}%)</small></span>
+</div>
+</div>`;
+}
+
+return `
+<div class="subj-card" style="border-top:4px solid ${bioColor}">
+<div class="subj-card-head" style="background:${bioBg}">
+<div class="subj-card-title">🧬 Biology <span style="font-size:11px;opacity:.7;font-weight:500">(Botany + Zoology)</span></div>
+<div class="subj-card-count">${total} Questions</div>
+</div>
+<div style="display:flex;gap:0">
+<div style="width:215px;flex-shrink:0;padding:14px 16px;border-right:2px solid #e8ecf4;display:flex;flex-direction:column;gap:10px;background:${bioBg}10">
+<div style="display:flex;justify-content:space-around;padding-bottom:10px;border-bottom:1px solid #e8ecf4">
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#22c55e;line-height:1">${easy.length}</div>
+<div style="font-size:9px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Easy</div>
+${trendArrow(eP,'easy')}
+</div>
+<div style="width:1px;background:#e8ecf4"></div>
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#f59e0b;line-height:1">${medium.length}</div>
+<div style="font-size:9px;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Med</div>
+${trendArrow(mP,'medium')}
+</div>
+<div style="width:1px;background:#e8ecf4"></div>
+<div style="text-align:center">
+<div style="font-size:26px;font-weight:900;color:#ef4444;line-height:1">${hard.length}</div>
+<div style="font-size:9px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:.4px;margin:2px 0">Hard</div>
+${trendArrow(hP,'hard')}
+</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+${donutSvg}
+<div style="width:100%">
+<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Easy</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${eP}%;height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${easy.length}</span>
+</div>
+<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Med</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${mP}%;height:100%;background:linear-gradient(90deg,#fcd34d,#f59e0b);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${medium.length}</span>
+</div>
+<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#374060">
+<span style="width:9px;height:9px;border-radius:50%;background:#ef4444;flex-shrink:0;display:inline-block"></span>
+<span style="flex:1;font-weight:600">Hard</span>
+<div style="flex:2;height:7px;background:#e8ecf4;border-radius:3px;overflow:hidden;margin:0 4px"><div style="width:${hP}%;height:100%;background:linear-gradient(90deg,#f87171,#ef4444);border-radius:3px"></div></div>
+<span style="font-weight:800;color:#1a2744;min-width:20px;text-align:right">${hard.length}</span>
+</div>
+</div>
+</div>
+<!-- Botany / Zoology sub-breakdown -->
+<div style="display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid #e8ecf4">
+${subSection('Botany','🌱','#22c55e',botA)}
+${subSection('Zoology','🐾','#f97316',zooA)}
+</div>
+</div>
+<!-- RIGHT: Q map + Q numbers -->
+<div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+<div>
+<div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗺️ Question Map</div>
+<div class="q-grid-poster">${qMapHtml}</div>
+</div>
+<div style="border-top:1px solid #e8ecf4;padding-top:10px">
+<div style="font-size:10px;font-weight:700;color:#9ba8c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">📋 Question Numbers</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<div style="background:#f0fdf4;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#166534">🟢 Easy (${easy.length})</div>
+<div class="qnum-chips">${eChips}</div>
+</div>
+<div style="background:#fefce8;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#854d0e">🟡 Medium (${medium.length})</div>
+<div class="qnum-chips">${mChips}</div>
+</div>
+<div style="background:#fff1f2;border-radius:6px;padding:8px">
+<div style="font-size:9px;font-weight:800;margin-bottom:4px;color:#991b1b">🔴 Hard (${hard.length})</div>
+<div class="qnum-chips">${hChips}</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>`;
+}
+
+function generatePoster(){
+const loaded=Object.entries(state.sheets).filter(([,v])=>v!==null);
+if(!loaded.length){toast('⚠️ Pehle koi sheet upload karo!',true);return}
+
+const examName=document.getElementById('exam-name').value.trim();
+const examDate=document.getElementById('exam-date').value.trim();
+const examBatch=document.getElementById('exam-batch').value.trim();
+const posterTitleInput=document.getElementById('poster-title').value.trim();
+const posterSubtitleInput=document.getElementById('poster-subtitle').value.trim();
+
+// Header title priority: custom poster title > exam name > default
+const headerTitle = posterTitleInput || examName || 'NEET/JEE Paper Analysis';
+
+// Header subtitle priority: custom subtitle > auto-built > default
+let headerSubtitle;
+if(posterSubtitleInput){
+  headerSubtitle = posterSubtitleInput;
+} else if(examDate || examBatch){
+  headerSubtitle = [examBatch, examDate].filter(Boolean).join(' · ');
+} else {
+  headerSubtitle = 'Question-wise Difficulty Tagging Report';
+}
+const subtitleLine = `<div class="pr-subtitle">${headerSubtitle}</div>`;
+
+// Chips: only show if user filled them
+const chips=[
+examDate ? `<span class="pr-meta-chip">📅 ${examDate}</span>` : '',
+examBatch ? `<span class="pr-meta-chip">🏛️ ${examBatch}</span>` : '',
+loaded.length > 1 ? `<span class="pr-meta-chip">📚 ${loaded.length} Subjects</span>` : '',
+].filter(Boolean).join('');
+
+// Check if biology card needed
+const hasBio = state.sheets.biology !== null;
+const hasBot = state.sheets.botany !== null;
+const hasZoo = state.sheets.zoology !== null;
+
+let cardsHtml = '';
+
+// Subjects to render (exclude botany/zoology if biology exists, and exclude biology — handle separately)
+const regularSubjects = ['physics','chemistry','maths'];
+
+regularSubjects.forEach(subj => {
+if(!state.sheets[subj]) return;
+const s = SUBJECTS.find(x=>x.id===subj);
+cardsHtml += buildSubjCard(subj, analyse(state.sheets[subj].rows), s.color, s.headBg);
+});
+
+// Biology combined (from biology sheet OR from botany+zoology sheets)
+if(hasBio){
+// Use dedicated biology sheet
+const bioA = analyse(state.sheets.biology.rows);
+const s = SUBJECTS.find(x=>x.id==='biology');
+cardsHtml += buildSubjCard('biology', bioA, s.color, s.headBg, 'Biology (Combined)', '🧬');
+} else if(hasBot || hasZoo){
+// Merge botany + zoology into biology card
+cardsHtml += buildBiologyCard(state.sheets.botany, state.sheets.zoology);
+}
+
+const ts=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+document.getElementById('poster-container').innerHTML=`
+<div class="poster-root" id="poster-output">
+<div class="pr-header" style="background:#111;border-bottom:4px solid #FF6B00">
+<div class="pr-header-left">
+<div class="pr-logo" style="background:#FF6B00">PW</div>
+<div>
+<div class="pr-title" style="color:#fff">${headerTitle}</div>
+${subtitleLine}
+</div>
+</div>
+${chips ? `<div class="pr-meta">${chips}</div>` : ''}
+</div>
+<div class="pr-body">
+<div class="pr-subjects smulti">${cardsHtml}</div>
+</div>
+<div class="pr-footer" style="background:#111">
+<div class="pr-footer-brand">⚡ PosterGen Pro — PW Analysis Suite</div>
+<div class="pr-legend">
+<div class="pr-leg-item"><div class="pr-leg-dot" style="background:#22c55e"></div>Easy ▲ = Good</div>
+<div class="pr-leg-item"><div class="pr-leg-dot" style="background:#f59e0b"></div>Medium</div>
+<div class="pr-leg-item"><div class="pr-leg-dot" style="background:#ef4444"></div>Hard ▲ = Tough</div>
+</div>
+<div style="color:rgba(255,255,255,.4)">Generated: ${ts}</div>
+</div>
+</div>`;
+
+switchTab('poster');
+toast('✅ Poster ready!');
+}
+
+function exportPNG(){
+const el=document.getElementById('poster-output');
+if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+toast('⏳ Export ho raha hai...');
+html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true}).then(c=>{
+const a=document.createElement('a');
+a.download='PosterGen_Analysis.png';a.href=c.toDataURL('image/png');a.click();
+toast('✅ Download ho gaya!');
+}).catch(()=>toast('❌ Export failed!',true));
+}
+
+function printPoster(){
+const el=document.getElementById('poster-output');
+if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+const win=window.open('','_blank');
+win.document.write(`<!DOCTYPE html><html><head><title>PosterGen Print</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+@page{size:landscape;margin:6mm}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.trend-arrow{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:12px}
+.trend-up{background:#fee2e2;color:#b91c1c}
+.trend-down{background:#dcfce7;color:#15803d}
+.trend-neutral{background:#f1f5f9;color:#64748b}
+.qc{width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin:2px}
+.qc-easy{background:#dcfce7;color:#166534}
+.qc-medium{background:#fef9c3;color:#854d0e}
+.qc-hard{background:#fee2e2;color:#991b1b}
+.qnum-chips{display:flex;flex-wrap:wrap;gap:3px}
+.qchip{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px}
+.qchip-easy{background:#dcfce7;color:#166534}
+.qchip-medium{background:#fef9c3;color:#854d0e}
+.qchip-hard{background:#fee2e2;color:#991b1b}
+.qnone{font-size:10px;color:#c0c8d8;font-style:italic}
+.q-grid-poster{display:flex;flex-wrap:wrap;gap:2px}
+</style></head><body>${el.outerHTML}</body></html>`);
+win.document.close();
+win.onload=()=>{win.focus();win.print();}
+toast('🖨️ Print dialog khul raha hai...');
+}
+
+function exportPDF(){
+const el=document.getElementById('poster-output');
+if(!el){toast('⚠️ Pehle poster generate karo!',true);return}
+toast('⏳ PDF ban raha hai...');
+html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true}).then(c=>{
+const imgData=c.toDataURL('image/png');
+const win=window.open('','_blank');
+win.document.write(`<!DOCTYPE html><html><head><title>PosterGen PDF</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff}
+@page{size:landscape;margin:0}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+img{width:100%;height:auto;display:block}
+</style></head><body><img src="${imgData}"></body></html>`);
+win.document.close();
+win.onload=()=>{win.focus();win.print();}
+toast('📄 PDF ke liye print dialog khulega — "Save as PDF" choose karo!');
+}).catch(()=>toast('❌ PDF export failed!',true));
+}
+
+function showLoad(t,m){document.getElementById('lo-title').textContent=t;document.getElementById('lo-msg').textContent=m;document.getElementById('lo').style.display='flex'}
+function setLoad(t,m){document.getElementById('lo-title').textContent=t;document.getElementById('lo-msg').textContent=m}
+function hideLoad(){document.getElementById('lo').style.display='none'}
+
+function toast(msg,err=false){
+const t=document.getElementById('toast');
+t.textContent=msg;t.style.background=err?'#ef4444':'#22c55e';
+t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ===== LIVE HEADER PREVIEW ===== */
+function livePreviewHeader(){
+const examName = document.getElementById('exam-name').value.trim();
+const examDate = document.getElementById('exam-date').value.trim();
+const examBatch = document.getElementById('exam-batch').value.trim();
+const posterTitle = document.getElementById('poster-title').value.trim();
+const posterSubtitle = document.getElementById('poster-subtitle').value.trim();
+
+const titleEl = document.getElementById('preview-title');
+const subEl = document.getElementById('preview-subtitle');
+
+// Title: custom > exam name > default
+titleEl.textContent = posterTitle || examName || 'NEET/JEE Paper Analysis';
+
+// Subtitle: custom > batch+date > default
+if(posterSubtitle){
+subEl.textContent = posterSubtitle;
+} else if(examDate || examBatch){
+subEl.textContent = [examBatch, examDate].filter(Boolean).join(' · ');
+} else {
+subEl.textContent = 'Question-wise Difficulty Tagging Report';
+}
+}
+
+// Also update preview when exam-name/date/batch change
+document.addEventListener('DOMContentLoaded', ()=>{
+['exam-name','exam-date','exam-batch'].forEach(id=>{
+document.getElementById(id).addEventListener('input', livePreviewHeader);
+});
+});
+
+init();
+</script>
+</body>
+</html>
